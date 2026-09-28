@@ -1,0 +1,338 @@
+{
+  "brand": {
+    "name": "Open Sesame",
+    "kicker": "A trusted door to your work"
+  },
+  "auth": {
+    "newAccount": "NEW ACCOUNT",
+    "createKey": "Create your key.",
+    "registerDescription": "Set up your account to open the door to your workspace.",
+    "password": "Password",
+    "passwordPlaceholder": "At least 8 characters",
+    "fullName": "Full name",
+    "email": "Email",
+    "emailPlaceholder": "you{'@'}company.com",
+    "confirmPassword": "Confirm password",
+    "confirmPasswordPlaceholder": "Repeat your password",
+    "requirements": {
+      "length": "At least 8 characters",
+      "number": "At least 1 number",
+      "lowercase": "At least 1 lowercase letter",
+      "uppercase": "At least 1 uppercase letter",
+      "special": "At least 1 special character"
+    },
+    "strength": {
+      "weak": "Weak password. Must contain:",
+      "medium": "Medium password. Must contain:",
+      "strong": "Strong password."
+    },
+    "alreadyAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "createAccount": "Create account",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "verify": {
+      "eyebrow": "VERIFY EMAIL",
+      "title": "Check your inbox.",
+      "description": "We sent a 6-digit code to {email}. It expires in 5 minutes.",
+      "code": "Verification code",
+      "codeError": "Enter the 6-digit code.",
+      "submit": "Verify account",
+      "noCode": "Didn't get a code?",
+      "resend": "Resend code",
+      "resendIn": "Resend in {seconds}s",
+      "resent": "A new code is on its way.",
+      "notVerified": "Your account isn't verified yet. We just sent you a new code.",
+      "wrongEmail": "Wrong email?",
+      "startOver": "Start over",
+      "verified": "Your account is verified. Sign in to continue.",
+      "editEmail": "Change it"
+    },
+    "reset": {
+      "eyebrow": "RESET PASSWORD",
+      "title": "Forgot your key?",
+      "description": "Enter your account email and we will send you a 6-digit code to set a new password.",
+      "send": "Send code",
+      "remembered": "Remembered it?",
+      "confirmTitle": "Set a new password.",
+      "confirmDescription": "If an account exists for {email}, a 6-digit code is on its way. It expires in 5 minutes.",
+      "submit": "Reset password",
+      "done": "Your password was reset. Sign in with your new password.",
+      "errors": {
+        "request": "Unable to send the reset code. Please try again.",
+        "confirm": "Unable to reset your password. Please try again.",
+        "invalidCode": "That code is invalid or has expired. Request a new one."
+      }
+    },
+    "errors": {
+      "signInRequired": "Enter your email and password to continue.",
+      "registerRequired": "Fill in every field to continue.",
+      "invalidEmail": "Enter a valid email address.",
+      "weakPassword": "Choose a stronger password that meets every requirement and doesn't include your name or a common word.",
+      "passwordMismatch": "Passwords must match.",
+      "signIn": "Unable to sign in. Check your email and password.",
+      "register": "Unable to create your account. Please try again.",
+      "signOut": "Unable to sign out.",
+      "otpRequired": "Enter the 6-digit code from your email.",
+      "verify": "Unable to verify your account. Please try again.",
+      "resend": "Unable to resend the code. Please try again.",
+      "resendLimited": "Too many codes requested. Try again in an hour.",
+      "profile": "Unable to load your profile."
+    }
+  },
+  "oauth": {
+    "eyebrow": "AUTHORIZE ACCESS",
+    "title": "{app} wants access.",
+    "description": "Review what this app is asking for before you open the door.",
+    "permissionsLabel": "{app} will be able to",
+    "allow": "Allow",
+    "deny": "Deny",
+    "finePrint": "Allowing sends you to {host}. {app} will use this access under its own terms; you can revoke it at any time.",
+    "backToDashboard": "Back to dashboard",
+    "client": {
+      "redirectsTo": "Redirects to",
+      "unverified": "Unverified",
+      "unverifiedHint": "Open Sesame couldn't confirm who publishes this app. Only continue if you trust it.",
+      "inactive": "This app has been disabled and can't be authorized."
+    },
+    "account": {
+      "switch": "Not you?"
+    },
+    "scopes": {
+      "sensitiveBadge": "Sensitive",
+      "identity": {
+        "title": "Know who you are",
+        "description": "Your Open Sesame account ID."
+      },
+      "openid": {
+        "title": "Sign you in",
+        "description": "Confirm your identity with Open Sesame."
+      },
+      "profile": {
+        "title": "See your profile",
+        "description": "Your full name."
+      },
+      "email": {
+        "title": "See your email address",
+        "description": "The email address on your account."
+      },
+      "offline_access": {
+        "title": "Stay connected",
+        "description": "Keep access while you're away, until you revoke it."
+      },
+      "custom": {
+        "title": "Use the \"{scope}\" permission",
+        "description": "A custom permission defined by this app."
+      }
+    },
+    "cancelled": {
+      "title": "Request cancelled.",
+      "description": "{app} didn't get access. You can close this tab."
+    },
+    "invalid": {
+      "title": "This request can't be completed.",
+      "unsupportedResponseType": "The app sent an unsupported response type. Contact the app's developer.",
+      "missingClient": "The app didn't identify itself. Contact the app's developer.",
+      "invalidRedirect": "The app sent an invalid return address. Contact the app's developer.",
+      "missingState": "The request is missing its security state. Contact the app's developer.",
+      "invalidChallengeMethod": "The app used an unsupported PKCE method. Contact the app's developer."
+    }
+  },
+  "dashboard": {
+    "signOut": "Sign out",
+    "nav": {
+      "label": "Dashboard",
+      "overview": "Overview",
+      "clients": "OAuth clients",
+      "profile": "Profile"
+    },
+    "clientsCard": {
+      "title": "OAuth clients",
+      "description": "Register apps that sign users in with Open Sesame.",
+      "count": "{count} active"
+    }
+  },
+  "clients": {
+    "eyebrow": "OAUTH CLIENTS",
+    "title": "Your apps.",
+    "description": "Apps registered here can ask users to sign in with Open Sesame.",
+    "new": "New client",
+    "search": "Search by name or client ID",
+    "retry": "Retry",
+    "noMatch": "No clients match your filters.",
+    "back": "All clients",
+    "notFound": "Client not found.",
+    "createTitle": "Register an app.",
+    "createDescription": "You'll get a client ID, and a secret for confidential apps.",
+    "createdOn": "Created {date}",
+    "credentials": "Credentials",
+    "clientId": "Client ID",
+    "secretHidden": "The client secret is stored hashed and can't be shown again. Rotate it if it's lost.",
+    "noSecret": "Public clients have no secret; they must use PKCE.",
+    "settings": "Settings",
+    "edit": "Edit",
+    "saved": "Changes saved.",
+    "danger": "Danger zone",
+    "cancel": "Cancel",
+    "copy": "Copy",
+    "copied": "Copied",
+    "yes": "Yes",
+    "no": "No",
+    "serverDefault": "Server default",
+    "filters": {
+      "all": "All",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "empty": {
+      "title": "No clients yet.",
+      "description": "Register your first app to start using Open Sesame for sign-in."
+    },
+    "types": {
+      "confidential": {
+        "title": "Confidential",
+        "description": "Server-side apps that can keep a secret."
+      },
+      "public": {
+        "title": "Public",
+        "description": "SPAs and mobile apps. No secret, PKCE required."
+      }
+    },
+    "grants": {
+      "authorization_code": "Users sign in through the consent screen.",
+      "refresh_token": "Keep users signed in with rotating refresh tokens.",
+      "client_credentials": "Machine-to-machine access with the client secret."
+    },
+    "secret": {
+      "title": "Copy your client secret now.",
+      "warning": "This is the only time it will be shown. Store it somewhere safe, such as your server's secret manager.",
+      "label": "Client secret",
+      "dismiss": "I've stored it"
+    },
+    "integration": {
+      "title": "Integration",
+      "description": "Send users to this URL to start sign-in. Replace the placeholders with values your app generates per request.",
+      "authorizeUrl": "Authorize URL"
+    },
+    "rotate": {
+      "title": "Rotate secret",
+      "description": "Issue a new secret. The current one stops working immediately.",
+      "message": "Apps using the current secret will fail until you deploy the new one. Continue?",
+      "confirm": "Rotate secret"
+    },
+    "deactivate": {
+      "title": "Deactivate client",
+      "description": "Blocks new sign-ins and revokes every refresh token issued to this app.",
+      "message": "Every user signed in through this app will be logged out and must sign in again after reactivation. Continue?",
+      "confirm": "Deactivate",
+      "done": "Client deactivated."
+    },
+    "activate": {
+      "title": "Reactivate client",
+      "description": "Allow sign-ins again. Previously revoked tokens stay revoked.",
+      "message": "The app will be able to sign users in again. Continue?",
+      "confirm": "Reactivate",
+      "done": "Client reactivated."
+    },
+    "form": {
+      "name": "App name",
+      "namePlaceholder": "My App",
+      "nameRequired": "Enter a name for the app.",
+      "nameTooLong": "Keep the name under 255 characters.",
+      "type": "Client type",
+      "typeLocked": "The client type can't be changed after creation.",
+      "redirects": "Redirect URIs",
+      "redirectsHint": "Exact URLs users return to after signing in. HTTPS, http://localhost, or a custom app scheme.",
+      "redirectUri": "Redirect URI {index}",
+      "redirectRequired": "Enter a URL or remove this row.",
+      "redirectInvalid": "Use https://, http://localhost, or a custom scheme, without a #fragment.",
+      "redirectDuplicate": "This URI is listed twice.",
+      "redirectsRequired": "Add at least one redirect URI for the authorization code flow.",
+      "addRedirect": "Add redirect URI",
+      "removeRedirect": "Remove redirect URI",
+      "grants": "Grant types",
+      "grantsRequired": "Choose at least one grant type.",
+      "pkce": "Require PKCE",
+      "pkceHint": "Recommended. Protects the authorization code if it's intercepted.",
+      "pkcePublic": "Always on for public clients.",
+      "advanced": "Token lifetimes",
+      "accessTtl": "Access token TTL (seconds)",
+      "refreshTtl": "Refresh token TTL (seconds)",
+      "ttlPlaceholder": "Server default",
+      "ttlInvalid": "Use a whole number of seconds greater than 0.",
+      "ttlHint": "Leave blank to use the server defaults.",
+      "ttlEditHint": "Leaving a field blank keeps its current value.",
+      "create": "Create client",
+      "save": "Save changes"
+    },
+    "errors": {
+      "load": "Unable to load your clients.",
+      "loadOne": "Unable to load this client.",
+      "create": "Unable to create the client.",
+      "update": "Unable to save your changes.",
+      "rotate": "Unable to rotate the secret.",
+      "activate": "Unable to reactivate the client.",
+      "deactivate": "Unable to deactivate the client."
+    }
+  },
+  "profile": {
+    "eyebrow": "ACCOUNT",
+    "title": "Your profile.",
+    "description": "Update your details and keep your key safe.",
+    "save": "Save changes",
+    "saved": "Profile updated.",
+    "noChanges": "Nothing to save yet.",
+    "account": {
+      "title": "Account details",
+      "verified": "Verified",
+      "unverified": "Unverified",
+      "unverifiedHint": "Your email isn’t verified yet. Enter the code we sent to finish setting it up.",
+      "verifyNow": "Verify now",
+      "nameRequired": "Enter your full name.",
+      "emailChangeHint": "We’ll send a 6-digit code to the new address, and your account stays unverified until you enter it."
+    },
+    "emailDialog": {
+      "title": "Change your email?",
+      "message": "We’ll send a verification code to {email}. Until you enter it, your account stays unverified and signing in will ask for the code.",
+      "confirm": "Change email"
+    },
+    "password": {
+      "title": "Password",
+      "current": "Current password",
+      "currentRequired": "Enter your current password.",
+      "new": "New password",
+      "sameAsCurrent": "Choose a password different from your current one.",
+      "submit": "Update password",
+      "changed": "Password updated. Use it next time you sign in."
+    },
+    "errors": {
+      "update": "Unable to update your profile.",
+      "emailTaken": "That email is already used by another account.",
+      "password": "Unable to change your password.",
+      "wrongPassword": "Your current password is incorrect."
+    },
+    "sessions": {
+      "title": "Active sessions",
+      "description": "Devices currently signed in to your account.",
+      "count": "{count} active",
+      "unknownDevice": "Unknown device",
+      "unknownIp": "Unknown IP",
+      "signedIn": "Signed in {date}",
+      "expires": "Expires {date}",
+      "revokeAll": {
+        "title": "Sign out everywhere",
+        "description": "End every session, including this one. You will need to sign in again.",
+        "message": "Every device signed in to your account, including this one, will be signed out. Continue?",
+        "confirm": "Sign out everywhere"
+      },
+      "errors": {
+        "load": "Unable to load your sessions.",
+        "revoke": "Unable to sign out your sessions."
+      }
+    }
+  }
+}
