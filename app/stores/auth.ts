@@ -19,7 +19,23 @@ type AuthUser = {
   [key: string]: unknown;
 };
 
-type SignInResult = "success" | "unverified" | "failed";
+type SignInResult = "success" | "mfa_required" | "unverified" | "failed";
+export type MfaMethod = "totp" | "email";
+// Mirrors the API's MfaSetupResponseSchema; secret/provisioning_uri are TOTP-only.
+export type MfaSetup = {
+  method: MfaMethod;
+  secret?: string | null;
+  provisioning_uri?: string | null;
+};
+
+type LoginResponse = {
+  challenge_id?: string;
+};
+
+function getChallengeId(value: unknown) {
+  const challengeId = (value as LoginResponse | undefined)?.challenge_id;
+  return typeof challengeId === "string" && challengeId ? challengeId : null;
+}
 
 // Mirrors the API's SessionResponseSchema (GET /auth/sessions).
 export type UserSession = {
@@ -51,6 +67,10 @@ export const useAuthStore = defineStore("auth", () => {
   const user = useState<AuthUser | null>("auth.user", () => null);
   // True once the API has been asked about the current session in this app load.
   const sessionChecked = useState<boolean>("auth.sessionChecked", () => false);
+  const mfaChallengeId = useState<string | null>(
+    "auth.mfaChallengeId",
+    () => null,
+  );
   const isAuthenticated = computed(() => !!user.value);
   const pendingEmail = useState<string>("auth.pendingEmail", () => {
     if (import.meta.client) {
@@ -123,6 +143,7 @@ export const useAuthStore = defineStore("auth", () => {
   ): Promise<SignInResult> {
     isLoading.value = true;
     error.value = "";
+    mfaChallengeId.value = null;
 
     if (!email || !password) {
       error.value = t("auth.errors.signInRequired");
@@ -138,11 +159,21 @@ export const useAuthStore = defineStore("auth", () => {
 
     try {
       const config = useRuntimeConfig();
-      await $fetch(`${config.public.apiBaseUrl}/auth/login`, {
-        method: "POST",
-        body: { email: email.trim(), password },
-        credentials: "include",
-      });
+      const loginResponse = await $fetch<LoginResponse>(
+        `${config.public.apiBaseUrl}/auth/login`,
+        {
+          method: "POST",
+          body: { email: email.trim(), password },
+          credentials: "include",
+        },
+      );
+
+      const challengeId = getChallengeId(loginResponse);
+      if (challengeId) {
+        mfaChallengeId.value = challengeId;
+        isLoading.value = false;
+        return "mfa_required";
+      }
 
       clearPendingEmail();
 
@@ -152,14 +183,125 @@ export const useAuthStore = defineStore("auth", () => {
     } catch (requestError) {
       isLoading.value = false;
 
+      const challengeId = getChallengeId(
+        (requestError as { data?: LoginResponse })?.data,
+      );
+      if (challengeId) {
+        mfaChallengeId.value = challengeId;
+        return "mfa_required";
+      }
+
       // Right password, but the account still needs its OTP; hand off to /verify.
-      if ((requestError as { data?: ApiError })?.data?.error === "email_not_verified") {
+      if (
+        (requestError as { data?: ApiError })?.data?.error ===
+        "email_not_verified"
+      ) {
         setPendingEmail(email.trim().toLowerCase());
         return "unverified";
       }
 
       error.value = getErrorMessage(requestError, t("auth.errors.signIn"));
       return "failed";
+    }
+  }
+
+  async function verifyMfaLogin(code: string) {
+    error.value = "";
+    const challengeId = mfaChallengeId.value;
+
+    if (!challengeId || !code.trim()) {
+      error.value = t("auth.errors.mfaCodeRequired");
+      return false;
+    }
+
+    isLoading.value = true;
+    try {
+      const config = useRuntimeConfig();
+      await $fetch(`${config.public.apiBaseUrl}/auth/login/2fa`, {
+        method: "POST",
+        body: { challenge_id: challengeId, code: code.trim() },
+        credentials: "include",
+      });
+
+      mfaChallengeId.value = null;
+      clearPendingEmail();
+      return !!(await fetchMe());
+    } catch (requestError) {
+      error.value = getErrorMessage(requestError, t("auth.errors.mfaVerify"));
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // For the email method the API also sends the first code right away.
+  async function setupMfa(method: MfaMethod): Promise<{
+    setup: MfaSetup | null;
+    error: string | null;
+  }> {
+    try {
+      const config = useRuntimeConfig();
+      const setup = await $fetch<MfaSetup>(
+        `${config.public.apiBaseUrl}/users/me/2fa/setup`,
+        { method: "POST", body: { method }, credentials: "include" },
+      );
+      return { setup, error: null };
+    } catch (requestError) {
+      return {
+        setup: null,
+        error: getErrorMessage(requestError, t("profile.mfa.errors.setup")),
+      };
+    }
+  }
+
+  async function confirmMfa(code: string) {
+    try {
+      const config = useRuntimeConfig();
+      const result = await $fetch<{ recovery_codes: string[] }>(
+        `${config.public.apiBaseUrl}/users/me/2fa/confirm`,
+        {
+          method: "POST",
+          body: { code },
+          credentials: "include",
+        },
+      );
+      return { recoveryCodes: result.recovery_codes, error: null };
+    } catch (requestError) {
+      return {
+        recoveryCodes: [],
+        error: getErrorMessage(requestError, t("profile.mfa.errors.confirm")),
+      };
+    }
+  }
+
+  // Emails a fresh code for the email method (setup resend or disabling);
+  // the API ignores it for authenticator apps.
+  async function requestMfaCode() {
+    try {
+      const config = useRuntimeConfig();
+      await $fetch(`${config.public.apiBaseUrl}/users/me/2fa/request-code`, {
+        method: "POST",
+        credentials: "include",
+      });
+      return null;
+    } catch (requestError) {
+      return getErrorStatus(requestError) === 429
+        ? t("auth.errors.resendLimited")
+        : getErrorMessage(requestError, t("profile.mfa.errors.sendCode"));
+    }
+  }
+
+  async function disableMfa(code: string) {
+    try {
+      const config = useRuntimeConfig();
+      await $fetch(`${config.public.apiBaseUrl}/users/me/2fa/disable`, {
+        method: "POST",
+        body: { code },
+        credentials: "include",
+      });
+      return null;
+    } catch (requestError) {
+      return getErrorMessage(requestError, t("profile.mfa.errors.disable"));
     }
   }
 
@@ -273,7 +415,10 @@ export const useAuthStore = defineStore("auth", () => {
 
   // Profile forms keep their own loading/error state, so these return the outcome
   // instead of writing to the shared `isLoading` / `error`.
-  async function updateProfile(changes: { full_name?: string; email?: string }) {
+  async function updateProfile(changes: {
+    full_name?: string;
+    email?: string;
+  }) {
     const previousEmail = user.value?.email;
 
     try {
@@ -288,8 +433,7 @@ export const useAuthStore = defineStore("auth", () => {
       );
 
       user.value = profile;
-      const emailChanged =
-        !!profile.email && profile.email !== previousEmail;
+      const emailChanged = !!profile.email && profile.email !== previousEmail;
 
       // The API resets verification and emails an OTP to the new address.
       if (emailChanged && profile.email) {
@@ -420,6 +564,7 @@ export const useAuthStore = defineStore("auth", () => {
     } finally {
       user.value = null;
       sessionChecked.value = true;
+      mfaChallengeId.value = null;
       clearPendingEmail();
     }
   }
@@ -431,6 +576,12 @@ export const useAuthStore = defineStore("auth", () => {
     isAuthenticated,
     pendingEmail,
     signIn,
+    mfaChallengeId,
+    verifyMfaLogin,
+    setupMfa,
+    confirmMfa,
+    requestMfaCode,
+    disableMfa,
     fetchMe,
     ensureSession,
     register,

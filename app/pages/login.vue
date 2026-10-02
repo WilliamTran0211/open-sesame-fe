@@ -33,6 +33,11 @@ async function signIn() {
 
   if (result === "success") {
     await navigateTo(returnTo.value || "/dashboard");
+  } else if (result === "mfa_required") {
+    await navigateTo({
+      path: "/login/2fa",
+      query: { redirect: returnTo.value || undefined },
+    });
   } else if (result === "unverified") {
     // The code from sign-up has likely expired, so ask /verify to send a fresh one.
     await navigateTo({
@@ -163,7 +168,10 @@ onMounted(() => {
       <p class="help-text">
         New here?
         <NuxtLink
-          :to="{ path: '/register', query: { redirect: returnTo || undefined } }"
+          :to="{
+            path: '/register',
+            query: { redirect: returnTo || undefined },
+          }"
           >Create an account</NuxtLink
         >
       </p>
