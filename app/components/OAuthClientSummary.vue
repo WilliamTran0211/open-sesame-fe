@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import lockIcon from "~/assets/icons/lock.svg";
+import { PhLockKey } from "@phosphor-icons/vue";
 import { getUrlHost, type OAuthClientInfo } from "~/utils/oauth";
 
 const props = defineProps<{
@@ -24,7 +24,7 @@ const redirectHost = computed(() => getUrlHost(props.redirectUri));
       </span>
       <span class="oauth-link-line" />
       <span class="oauth-app-mark oauth-app-mark-self">
-        <img :src="lockIcon" alt="" />
+        <PhLockKey :size="18" weight="bold" />
       </span>
     </div>
 

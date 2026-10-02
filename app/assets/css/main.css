@@ -618,11 +618,7 @@ body {
 
 .oauth-app-mark-self {
   background: var(--color-primary);
-}
-
-.oauth-app-mark-self img {
-  width: 18px;
-  height: 18px;
+  color: var(--color-primary-content);
 }
 
 .oauth-link-line {
@@ -694,12 +690,9 @@ body {
 .oauth-account-copy small { opacity: 0.72; font-size: 11px; }
 
 .oauth-section-label {
-  margin: 0 0 10px;
-  opacity: 0.72;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .oauth-scope-list {
@@ -716,17 +709,14 @@ body {
   gap: 10px;
 }
 
-.oauth-scope-dot {
-  width: 8px;
-  height: 8px;
+.oauth-scope-icon {
   flex-shrink: 0;
-  margin-top: 6px;
-  border-radius: 999px;
-  background: var(--color-primary);
+  margin-top: 1px;
+  color: var(--color-primary);
 }
 
-.oauth-scope-sensitive .oauth-scope-dot { background: var(--color-warning); }
-.oauth-scope-custom .oauth-scope-dot { background: var(--color-secondary); }
+.oauth-scope-sensitive .oauth-scope-icon { color: var(--color-warning); }
+.oauth-scope-custom .oauth-scope-icon { color: var(--color-secondary); }
 
 .oauth-scope-title {
   display: flex;
