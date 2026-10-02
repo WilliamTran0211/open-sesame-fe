@@ -24,6 +24,31 @@
     "title": "Sign in once. Share only what each app needs.",
     "description": "Open Sesame is the OAuth 2.0 sign-in for your apps. People approve every permission, and you manage every client.",
     "previewCaption": "The consent screen people see before an app gets access.",
+    "security": {
+      "title": "Account security, already built.",
+      "description": "The features teams usually postpone are in place from the first sign-in.",
+      "mfa": {
+        "title": "Two-factor, your way",
+        "description": "People choose an authenticator app or one-time codes by email, and get single-use recovery codes for the day a phone goes missing.",
+        "methods": {
+          "app": "Authenticator app",
+          "email": "Email code",
+          "recovery": "Recovery codes"
+        }
+      },
+      "consent": {
+        "title": "Consent people can read",
+        "description": "Every scope has a plain-language description, and sensitive access is flagged before anyone clicks Allow."
+      },
+      "recovery": {
+        "title": "Recovery without tickets",
+        "description": "Verification and password-reset codes expire in five minutes and are rate limited. People can sign out of every device at once."
+      },
+      "tokens": {
+        "title": "Clients and tokens under control",
+        "description": "Pin exact redirect URIs and rotate client secrets. Refresh tokens rotate on every use, and reusing an old one revokes the whole chain."
+      }
+    },
     "flow": {
       "title": "One redirect, one approval, one token exchange.",
       "description": "Open Sesame runs the OAuth 2.0 authorization code flow with PKCE, so your app never handles a password.",
