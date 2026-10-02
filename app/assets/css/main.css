@@ -1246,6 +1246,8 @@ body {
 }
 
 @media (max-width: 600px) {
+  /* Leave room above the card for the absolutely placed theme toggle. */
+  .login-page { padding-top: 64px; }
   .register-card {
     width: 100%;
     padding: 20px 0;

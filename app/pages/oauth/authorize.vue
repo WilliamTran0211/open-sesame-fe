@@ -137,7 +137,7 @@ onMounted(() => {
             {{ t("oauth.permissionsLabel", { app: appName }) }}
           </p>
           <OAuthScopeList :scopes="grantedScopes" />
-          <p v-if="scopesNarrowed" class="dash-field-hint">
+          <p v-if="scopesNarrowed" class="dash-field-hint mt-3">
             {{ t("oauth.scopesNarrowed", { app: appName }) }}
           </p>
         </div>
