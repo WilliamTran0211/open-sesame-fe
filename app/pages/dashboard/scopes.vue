@@ -74,7 +74,6 @@ onMounted(() => {
   <DashboardShell>
     <div class="dash-page-header">
       <div class="dashboard-intro">
-        <p class="eyebrow">{{ t("scopes.eyebrow") }}</p>
         <h1>{{ t("scopes.title") }}</h1>
         <p>{{ t("scopes.description") }}</p>
       </div>
@@ -125,16 +124,25 @@ onMounted(() => {
       {{ scopesStore.error }}
     </div>
 
-    <div v-if="scopesStore.isLoading && !scopesStore.scopes.length" class="dash-empty" role="status">
-      <span class="loading loading-spinner loading-md text-primary" />
-    </div>
+    <ul
+      v-if="scopesStore.isLoading && !scopesStore.scopes.length"
+      class="client-list"
+      :aria-label="t('common.loading')"
+    >
+      <li v-for="row in 3" :key="row" class="client-row scope-row" aria-hidden="true">
+        <span class="client-row-main">
+          <span class="skeleton h-3 w-28" />
+          <span class="skeleton h-4 w-56" />
+        </span>
+      </li>
+    </ul>
 
     <div v-else-if="!scopesStore.scopes.length" class="dash-empty">
       <p>{{ t("scopes.empty") }}</p>
     </div>
 
     <ul v-else class="client-list">
-      <li v-for="scope in scopesStore.scopes" :key="scope.name" class="client-row">
+      <li v-for="scope in scopesStore.scopes" :key="scope.name" class="client-row scope-row">
         <span class="client-row-main">
           <code>{{ scope.name }}</code>
           <input

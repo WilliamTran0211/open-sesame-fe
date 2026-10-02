@@ -828,6 +828,9 @@ body {
 
 .client-row.is-inactive { opacity: 0.6; }
 
+/* Scope rows have no monogram: text on the left, actions on the right. */
+.client-row.scope-row { grid-template-columns: minmax(0, 1fr) auto; }
+
 .client-monogram {
   display: grid;
   width: 38px;
@@ -1223,6 +1226,8 @@ body {
   .dash-search { width: 100%; }
   .client-row { grid-template-columns: auto minmax(0, 1fr) auto; }
   .client-row-meta { grid-column: 2 / -1; flex-wrap: wrap; }
+  .client-row.scope-row { grid-template-columns: minmax(0, 1fr); }
+  .client-row.scope-row .client-row-meta { grid-column: 1; }
   .client-row .client-row-caret { grid-column: 3; grid-row: 1; }
   .client-type-options,
   .dash-ttl-grid { grid-template-columns: 1fr; }

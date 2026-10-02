@@ -194,8 +194,7 @@
   },
   "scopes": {
     "empty": "No scopes are available yet.",
-    "stale": "No longer available — uncheck to remove.",
-    "eyebrow": "SCOPES",
+    "stale": "No longer available. Uncheck to remove it.",
     "title": "Permissions.",
     "description": "Scopes clients can be allowed to request. Descriptions are shown to users on the consent screen.",
     "new": "New scope",
