@@ -3,14 +3,14 @@ definePageMeta({
   middleware: ["guest"],
 });
 
-import lockIcon from "~/assets/icons/lock.svg";
+import { PhLockKey } from "@phosphor-icons/vue";
 </script>
 
 <template>
   <main class="landing-shell">
     <section class="landing-panel">
       <div class="brand-mark" aria-hidden="true">
-        <img :src="lockIcon" alt="" />
+        <PhLockKey :size="18" weight="bold" />
       </div>
       <p class="eyebrow">OPEN-SESAME / PLATFORM</p>
       <h1>Secure access for every team.</h1>
