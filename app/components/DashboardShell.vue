@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import lockIcon from "~/assets/icons/lock.svg";
+import { PhLockKey, PhSignOut } from "@phosphor-icons/vue";
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -31,9 +31,9 @@ async function signOut() {
     <header class="dashboard-header">
       <NuxtLink to="/dashboard" class="dashboard-brand">
         <div class="brand-mark" aria-hidden="true">
-          <img :src="lockIcon" alt="" />
+          <PhLockKey :size="16" weight="bold" />
         </div>
-        <span>OPEN-SESAME</span>
+        <span>{{ t("brand.name") }}</span>
       </NuxtLink>
 
       <nav class="dashboard-nav" :aria-label="t('dashboard.nav.label')">
@@ -42,6 +42,7 @@ async function signOut() {
           :key="link.to"
           :to="link.to"
           :class="{ 'is-active': isActive(link) }"
+          :aria-current="isActive(link) ? 'page' : undefined"
         >
           {{ link.label }}
         </NuxtLink>
@@ -50,6 +51,7 @@ async function signOut() {
       <div class="dashboard-header-actions">
         <ThemeToggle />
         <button class="btn btn-ghost btn-sm" type="button" @click="signOut">
+          <PhSignOut :size="16" aria-hidden="true" />
           {{ t("dashboard.signOut") }}
         </button>
       </div>
