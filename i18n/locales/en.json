@@ -23,7 +23,27 @@
     },
     "title": "Sign in once. Share only what each app needs.",
     "description": "Open Sesame is the OAuth 2.0 sign-in for your apps. People approve every permission, and you manage every client.",
-    "previewCaption": "The consent screen people see before an app gets access."
+    "previewCaption": "The consent screen people see before an app gets access.",
+    "flow": {
+      "title": "One redirect, one approval, one token exchange.",
+      "description": "Open Sesame runs the OAuth 2.0 authorization code flow with PKCE, so your app never handles a password.",
+      "authorizeLabel": "Send people to sign in",
+      "tokenLabel": "Exchange the code on your server",
+      "steps": {
+        "redirect": {
+          "title": "Redirect",
+          "description": "Your app sends people here with its client ID, a registered redirect URI and a PKCE challenge."
+        },
+        "approve": {
+          "title": "Approve",
+          "description": "They sign in, pass two-factor if it's on, and approve only the scopes your app is allowed to ask for."
+        },
+        "exchange": {
+          "title": "Exchange",
+          "description": "Your server trades the one-time code and verifier for a short-lived access token and a refresh token."
+        }
+      }
+    }
   },
   "auth": {
     "login": {

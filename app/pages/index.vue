@@ -89,6 +89,8 @@ const exampleClient: OAuthClientInfo = {
       </figure>
     </section>
 
+    <LandingFlow />
+
     <AuthFooter />
   </main>
 </template>
