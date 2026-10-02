@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import eyeIcon from "~/assets/icons/eye.svg";
-import eyeOffIcon from "~/assets/icons/eye-off.svg";
+import { PhCheck, PhEye, PhEyeSlash, PhX } from "@phosphor-icons/vue";
 import { getPasswordChecks } from "~/utils/password";
 
 const props = withDefaults(
@@ -66,7 +65,10 @@ function hideStrength() {
       <label :for="id">{{ label }}</label>
     </div>
     <div class="password-input-wrap">
-      <label class="input input-ghost flex w-full items-center gap-2">
+      <label
+        class="input input-ghost flex w-full items-center gap-2"
+        :class="{ 'input-error': error }"
+      >
         <input
           :id="id"
           :value="modelValue"
@@ -74,7 +76,8 @@ function hideStrength() {
           :autocomplete="autocomplete"
           :placeholder="placeholder"
           class="grow"
-          :class="{ 'text-error': error }"
+          :aria-invalid="error || undefined"
+          :aria-describedby="`${id}-strength`"
           @focus="isFocused = true"
           @blur="hideStrength"
           @input="
@@ -90,11 +93,13 @@ function hideStrength() {
           @mousedown.prevent
           @click="isPasswordVisible = !isPasswordVisible"
         >
-          <img :src="isPasswordVisible ? eyeOffIcon : eyeIcon" alt="" />
+          <PhEyeSlash v-if="isPasswordVisible" :size="17" aria-hidden="true" />
+          <PhEye v-else :size="17" aria-hidden="true" />
         </button>
       </label>
 
       <div
+        :id="`${id}-strength`"
         class="password-strength-popover"
         :class="{ 'password-strength-popover-visible': showStrength }"
         aria-live="polite"
@@ -118,7 +123,8 @@ function hideStrength() {
               :class="checks[index] ? 'is-met' : 'is-unmet'"
               aria-hidden="true"
             >
-              {{ checks[index] ? "✓" : "×" }}
+              <PhCheck v-if="checks[index]" :size="14" weight="bold" />
+              <PhX v-else :size="14" />
             </span>
             <span>{{ requirement }}</span>
           </li>

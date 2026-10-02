@@ -181,6 +181,11 @@ body {
   box-shadow: 0 1px 0 var(--color-primary);
 }
 
+.login-card .input-ghost.input-error,
+.dash-card .input-ghost.input-error {
+  border-color: var(--color-error);
+}
+
 .field-error {
   height: 16px;
   min-height: 16px;
@@ -250,10 +255,10 @@ body {
 }
 
 .strength-segment.is-active { opacity: 1; }
-.strength-segment-1 { background: #ef4444; }
-.strength-segment-2 { background: #f97316; }
-.strength-segment-3 { background: #7dd3fc; }
-.strength-segment-4 { background: #3b82f6; }
+.strength-segment-1 { background: var(--color-error); }
+.strength-segment-2 { background: var(--color-warning); }
+.strength-segment-3 { background: var(--color-accent); }
+.strength-segment-4 { background: var(--color-primary); }
 
 .password-requirements {
   display: grid;
@@ -277,8 +282,6 @@ body {
   place-items: center;
   width: 16px;
   height: 16px;
-  font-size: 18px;
-  line-height: 1;
 }
 
 .requirement-state.is-met { color: var(--color-primary); }
@@ -325,14 +328,14 @@ body {
   cursor: pointer;
 }
 
+.password-toggle:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
 .password-toggle:hover {
   background: color-mix(in srgb, var(--color-primary) 10%, transparent);
   color: var(--color-primary);
-}
-
-.password-toggle img {
-  width: 17px;
-  height: 17px;
 }
 
 .login-card .input:focus {
@@ -1297,6 +1300,13 @@ footer span:last-child {
   .dash-danger-row { flex-direction: column; align-items: flex-start; }
   .session-row { flex-direction: column; align-items: flex-start; }
   .session-meta { text-align: left; }
+}
+
+@media (max-width: 1100px) {
+  .password-strength-popover {
+    top: calc(100% + 8px);
+    left: 0;
+  }
 }
 
 @media (max-width: 600px) {

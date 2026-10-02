@@ -36,13 +36,19 @@ function updateCode(event: Event) {
       :value="modelValue"
       class="input input-ghost otp-input"
       :class="{ 'input-error': error }"
+      :aria-invalid="error || undefined"
+      :aria-describedby="error ? `${id}-error` : undefined"
       inputmode="numeric"
       autocomplete="one-time-code"
       :maxlength="length"
       :placeholder="'0'.repeat(length)"
       @input="updateCode"
     />
-    <p class="field-error" :class="{ 'field-error-visible': error }">
+    <p
+      :id="`${id}-error`"
+      class="field-error"
+      :class="{ 'field-error-visible': error }"
+    >
       {{ errorMessage }}
     </p>
   </div>
