@@ -54,14 +54,6 @@ body {
   color: var(--color-base-content);
 }
 
-.global-page-spinner {
-  position: fixed;
-  top: 18px;
-  right: 20px;
-  z-index: 50;
-  color: var(--color-primary);
-}
-
 .login-page {
   display: grid;
   min-height: 100dvh;

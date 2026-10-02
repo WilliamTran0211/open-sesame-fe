@@ -2,10 +2,6 @@
 import { THEME_STORAGE_KEY } from "~/composables/useTheme";
 
 const { isDark } = useTheme();
-const route = useRoute();
-const showPageSpinner = computed(
-  () => !["/login", "/register"].includes(route.path),
-);
 
 // Set the theme before first paint so dark-mode users don't see a light flash.
 useHead({
@@ -51,13 +47,7 @@ watch(isDark, applyTheme);
 </script>
 
 <template>
-  <div
-    v-if="showPageSpinner"
-    class="global-page-spinner"
-    role="status"
-    aria-label="Loading page"
-  >
-    <span class="loading loading-spinner loading-sm" />
-  </div>
+  <!-- Shows only while a route is loading, unlike a permanent spinner. -->
+  <NuxtLoadingIndicator color="var(--color-primary)" :height="2" />
   <NuxtPage />
 </template>
