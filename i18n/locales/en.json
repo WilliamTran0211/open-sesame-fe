@@ -12,6 +12,15 @@
     "copyright": "© {year} Open Sesame"
   },
   "landing": {
+    "meta": {
+      "title": "Open Sesame: one sign-in for all your apps"
+    },
+    "nav": {
+      "label": "Page sections",
+      "flow": "How it works",
+      "security": "Security",
+      "stack": "Self-hosting"
+    },
     "title": "Sign in once. Share only what each app needs.",
     "description": "Open Sesame is the OAuth 2.0 sign-in for your apps. People approve every permission, and you manage every client.",
     "previewCaption": "The consent screen people see before an app gets access."

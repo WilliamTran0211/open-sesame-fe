@@ -461,6 +461,40 @@ body {
   margin: 0 auto;
 }
 
+.landing-nav .dashboard-brand {
+  color: inherit;
+}
+
+.landing-links {
+  display: flex;
+  gap: 4px;
+}
+
+.landing-links a {
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.75;
+  text-decoration: none;
+}
+
+.landing-links a:hover {
+  opacity: 1;
+}
+
+.landing-links a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.landing-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .landing-hero {
   display: grid;
   flex: 1;
@@ -524,6 +558,8 @@ body {
 }
 
 @media (max-width: 900px) {
+  /* Sections stay reachable by scrolling; the anchors are a desktop shortcut. */
+  .landing-links { display: none; }
   .landing-hero { grid-template-columns: minmax(0, 1fr); align-content: start; padding-top: 16px; }
   .landing-preview .login-card,
   .landing-preview figcaption { margin-inline: auto; }
@@ -1319,6 +1355,10 @@ body {
   .dashboard-intro { margin-bottom: 32px; }
   .dashboard-intro h1 { font-size: 34px; line-height: 1.1; }
   .dashboard-intro > p:last-child { max-width: 280px; line-height: 1.6; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
 }
 
 @media (prefers-reduced-motion: reduce) {

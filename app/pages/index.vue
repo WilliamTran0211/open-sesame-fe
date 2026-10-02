@@ -8,6 +8,13 @@ import type { OAuthClientInfo } from "~/utils/oauth";
 
 const { t } = useI18n();
 
+useSeoMeta({
+  title: () => t("landing.meta.title"),
+  description: () => t("landing.description"),
+  ogTitle: () => t("landing.meta.title"),
+  ogDescription: () => t("landing.description"),
+});
+
 // Sample data for the consent preview, rendered with the real consent components.
 const exampleClient: OAuthClientInfo = {
   client_id: "ledgerline-web",
@@ -21,13 +28,23 @@ const exampleClient: OAuthClientInfo = {
 <template>
   <main class="landing">
     <header class="landing-nav">
-      <span class="dashboard-brand">
+      <NuxtLink to="/" class="dashboard-brand">
         <span class="brand-mark" aria-hidden="true">
           <PhLockKey :size="16" weight="bold" />
         </span>
         <span>{{ t("brand.name") }}</span>
-      </span>
-      <ThemeToggle />
+      </NuxtLink>
+      <nav class="landing-links" :aria-label="t('landing.nav.label')">
+        <a href="#flow">{{ t("landing.nav.flow") }}</a>
+        <a href="#security">{{ t("landing.nav.security") }}</a>
+        <a href="#stack">{{ t("landing.nav.stack") }}</a>
+      </nav>
+      <div class="landing-nav-actions">
+        <ThemeToggle />
+        <NuxtLink to="/login" class="btn btn-ghost btn-sm">
+          {{ t("auth.signIn") }}
+        </NuxtLink>
+      </div>
     </header>
 
     <section class="landing-hero" aria-labelledby="landing-title">
@@ -35,12 +52,12 @@ const exampleClient: OAuthClientInfo = {
         <h1 id="landing-title">{{ t("landing.title") }}</h1>
         <p>{{ t("landing.description") }}</p>
         <div class="landing-actions">
-          <NuxtLink to="/login" class="btn btn-primary">
-            {{ t("auth.signIn") }}
+          <NuxtLink to="/register" class="btn btn-primary">
+            {{ t("auth.createAccount") }}
             <PhArrowRight :size="16" weight="bold" aria-hidden="true" />
           </NuxtLink>
-          <NuxtLink to="/register" class="btn btn-ghost">
-            {{ t("auth.createAccount") }}
+          <NuxtLink to="/login" class="btn btn-ghost">
+            {{ t("auth.signIn") }}
           </NuxtLink>
         </div>
       </div>
