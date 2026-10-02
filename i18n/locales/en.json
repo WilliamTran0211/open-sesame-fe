@@ -177,10 +177,19 @@
       "scopes": "Scopes",
       "profile": "Profile"
     },
+    "greeting": "Good to see you, {name}.",
     "clientsCard": {
       "title": "OAuth clients",
       "description": "Register apps that sign users in with Open Sesame.",
       "count": "{count} active"
+    },
+    "scopesCard": {
+      "title": "Scopes",
+      "description": "Manage the permissions clients can request."
+    },
+    "profileCard": {
+      "title": "Profile and security",
+      "description": "Your details, password, two-factor authentication and sessions."
     }
   },
   "scopes": {

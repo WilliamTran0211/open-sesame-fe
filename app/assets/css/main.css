@@ -536,47 +536,7 @@ body {
   font-size: 14px;
 }
 
-.workspace-list {
-  display: grid;
-  gap: 10px;
-}
-
-.workspace-item {
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  justify-content: initial;
-  padding: 18px 20px;
-  border-color: color-mix(in srgb, currentColor 12%, transparent);
-  text-align: left;
-}
-
-.workspace-item:hover {
-  transform: translateY(-2px);
-}
-
-.workspace-icon {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
-  color: var(--color-primary);
-}
-
-.workspace-copy {
-  display: grid;
-  gap: 5px;
-}
-
-.workspace-copy strong { font-size: 13px; }
-.workspace-copy small { opacity: 0.72; font-size: 11px; }
-.workspace-status { color: var(--color-success); font: 10px var(--font-mono); text-transform: uppercase; }
 .workspace-arrow { opacity: 0.72; }
-.dashboard-note { display: flex; gap: 8px; margin-top: 32px; opacity: 0.72; font-size: 12px; }
 
 /* OAuth consent */
 .oauth-card {
@@ -888,6 +848,8 @@ body {
 }
 
 .client-row-main strong { font-size: 14px; }
+.client-row-main small { opacity: 0.72; font-size: 12px; }
+.client-row-caret { opacity: 0.6; }
 .client-row-main code { opacity: 0.72; font-family: var(--font-mono); font-size: 11px; }
 
 .client-row-meta {
@@ -1254,7 +1216,8 @@ body {
   .dash-search { width: 100%; }
   .client-row { grid-template-columns: auto minmax(0, 1fr) auto; }
   .client-row-meta { grid-column: 2 / -1; flex-wrap: wrap; }
-  .client-row .workspace-arrow { grid-column: 3; grid-row: 1; }
+  .client-row .workspace-arrow,
+  .client-row .client-row-caret { grid-column: 3; grid-row: 1; }
   .client-type-options,
   .dash-ttl-grid { grid-template-columns: 1fr; }
   .dash-details { grid-template-columns: 1fr; gap: 4px; }
@@ -1296,11 +1259,5 @@ body {
   .dashboard-intro { margin-bottom: 32px; }
   .dashboard-intro h1 { font-size: 34px; line-height: 1.1; }
   .dashboard-intro > p:last-child { max-width: 280px; line-height: 1.6; }
-  .workspace-item { grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; padding: 15px; }
-  .workspace-status { display: none; }
   .workspace-arrow { grid-column: 3; grid-row: 1; }
-  .workspace-copy { min-width: 0; }
-  .workspace-copy strong,
-  .workspace-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .dashboard-note { align-items: flex-start; line-height: 1.5; }
 }
