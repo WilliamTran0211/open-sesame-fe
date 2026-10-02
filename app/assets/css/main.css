@@ -111,11 +111,6 @@ body {
   color: var(--color-primary);
 }
 
-.login-brand .brand-mark img {
-  width: 21px;
-  height: 21px;
-}
-
 .brand-name {
   margin: 0;
   color: var(--color-base-content);
@@ -137,7 +132,7 @@ body {
 }
 
 .login-card .section-heading h1 {
-  margin: 10px 0 8px;
+  margin: 0 0 8px;
   font-size: clamp(30px, 7vw, 38px);
   line-height: 1.05;
   letter-spacing: -1.3px;

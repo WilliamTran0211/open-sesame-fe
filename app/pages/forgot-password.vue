@@ -150,7 +150,6 @@ onBeforeUnmount(() => {
     <AuthPanel
       v-if="step === 'request'"
       heading-id="reset-title"
-      :eyebrow="t('auth.reset.eyebrow')"
       :title="t('auth.reset.title')"
       :description="t('auth.reset.description')"
       :loading="isLoading"
@@ -191,7 +190,6 @@ onBeforeUnmount(() => {
     <AuthPanel
       v-else
       heading-id="reset-title"
-      :eyebrow="t('auth.reset.eyebrow')"
       :title="t('auth.reset.confirmTitle')"
       :description="t('auth.reset.confirmDescription', { email: normalizedEmail })"
       :loading="isLoading"

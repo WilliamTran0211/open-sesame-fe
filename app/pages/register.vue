@@ -54,7 +54,6 @@ async function register() {
 
     <AuthPanel
       heading-id="register-title"
-      :eyebrow="t('auth.newAccount')"
       :title="t('auth.createKey')"
       :description="t('auth.registerDescription')"
       card-class="register-card"

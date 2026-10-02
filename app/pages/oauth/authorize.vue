@@ -88,7 +88,6 @@ onMounted(() => {
     <AuthPanel
       v-if="!request"
       heading-id="consent-title"
-      :eyebrow="t('oauth.eyebrow')"
       :title="t('oauth.invalid.title')"
       :description="t(`oauth.invalid.${parsed.error}`)"
       card-class="oauth-card"
@@ -101,7 +100,6 @@ onMounted(() => {
     <AuthPanel
       v-else-if="consentState === 'cancelled'"
       heading-id="consent-title"
-      :eyebrow="t('oauth.eyebrow')"
       :title="t('oauth.cancelled.title')"
       :description="t('oauth.cancelled.description', { app: appName })"
       card-class="oauth-card"
@@ -114,7 +112,6 @@ onMounted(() => {
     <AuthPanel
       v-else
       heading-id="consent-title"
-      :eyebrow="t('oauth.eyebrow')"
       :title="t('oauth.title', { app: appName })"
       :description="t('oauth.description')"
       card-class="oauth-card"

@@ -3,12 +3,14 @@
     "useDark": "Switch to dark theme",
     "useLight": "Switch to light theme"
   },
+  "common": {
+    "loading": "Loading"
+  },
   "brand": {
     "name": "Open Sesame",
     "kicker": "A trusted door to your work"
   },
   "auth": {
-    "newAccount": "NEW ACCOUNT",
     "createKey": "Create your key.",
     "registerDescription": "Set up your account to open the door to your workspace.",
     "password": "Password",
@@ -34,7 +36,6 @@
     "signIn": "Sign in",
     "createAccount": "Create account",
     "mfa": {
-      "eyebrow": "TWO-FACTOR AUTHENTICATION",
       "title": "Verify it's you.",
       "description": "Enter the code from your authenticator app or the one we just emailed you. You can also use a recovery code.",
       "code": "Verification or recovery code",
@@ -47,7 +48,6 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "verify": {
-      "eyebrow": "VERIFY EMAIL",
       "title": "Check your inbox.",
       "description": "We sent a 6-digit code to {email}. It expires in 5 minutes.",
       "code": "Verification code",
@@ -64,7 +64,6 @@
       "editEmail": "Change it"
     },
     "reset": {
-      "eyebrow": "RESET PASSWORD",
       "title": "Forgot your key?",
       "description": "Enter your account email and we will send you a 6-digit code to set a new password.",
       "send": "Send code",
@@ -98,7 +97,6 @@
     }
   },
   "oauth": {
-    "eyebrow": "AUTHORIZE ACCESS",
     "title": "{app} wants access.",
     "description": "Review what this app is asking for before you open the door.",
     "permissionsLabel": "{app} will be able to",

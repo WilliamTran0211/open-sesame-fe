@@ -61,7 +61,6 @@ onMounted(() => {
 
     <AuthPanel
       heading-id="login-title"
-      eyebrow="WELCOME BACK"
       title="Open the door!"
       description="Sign in to continue to your workspace."
     >

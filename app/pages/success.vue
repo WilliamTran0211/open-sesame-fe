@@ -16,7 +16,6 @@ onMounted(() => {
 
     <AuthPanel
       heading-id="success-title"
-      eyebrow="ACCESS GRANTED"
       title="You're in."
       description="Your workspace is ready. Taking you there now."
       card-class="success-card"

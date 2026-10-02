@@ -40,7 +40,6 @@ async function verify() {
 
     <AuthPanel
       heading-id="mfa-title"
-      :eyebrow="t('auth.mfa.eyebrow')"
       :title="t('auth.mfa.title')"
       :description="t('auth.mfa.description')"
       :loading="auth.isLoading"

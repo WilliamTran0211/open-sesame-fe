@@ -139,7 +139,6 @@ onBeforeUnmount(() => {
 
     <AuthPanel
       heading-id="verify-title"
-      :eyebrow="t('auth.verify.eyebrow')"
       :title="t('auth.verify.title')"
       :description="t('auth.verify.description', { email: auth.pendingEmail })"
       :loading="auth.isLoading"
