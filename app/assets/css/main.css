@@ -737,7 +737,51 @@ body {
   overflow-wrap: anywhere;
 }
 
+.landing-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(32px, 6vw, 80px);
+}
+
+.landing-command {
+  display: inline-block;
+  margin: 28px 0 0;
+  padding: 12px 18px;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 8px;
+  background: var(--color-base-100);
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.landing-command code::before {
+  content: "$ ";
+  opacity: 0.5;
+}
+
+/* Logo wall: logos only, one color so they sit in both themes. */
+.landing-logos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-logos li {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+  border-radius: var(--radius-box);
+  background: var(--color-base-100);
+  opacity: 0.8;
+}
+
 @media (max-width: 900px) {
+  .landing-stack { grid-template-columns: minmax(0, 1fr); }
   .landing-flow { grid-template-columns: minmax(0, 1fr); }
   .landing-bento { grid-template-columns: minmax(0, 1fr); }
   .bento-wide { grid-column: auto; }

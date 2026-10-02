@@ -91,6 +91,7 @@ const exampleClient: OAuthClientInfo = {
 
     <LandingFlow />
     <LandingSecurity />
+    <LandingStack />
 
     <AuthFooter />
   </main>
