@@ -1,5 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
+/* Self-hosted so sign-in pages make no third-party font requests. */
+@import "@fontsource-variable/manrope/wght.css";
+@import "@fontsource/dm-mono/400.css";
+@import "@fontsource/dm-mono/500.css";
 @plugin "daisyui" {
   themes: light --default, dark --prefersdark;
 }
@@ -26,8 +29,13 @@
   --radius-box: 0.75rem;
 }
 
+@theme {
+  --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, monospace;
+}
+
 :root {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-sans);
 }
 
 html,
@@ -123,7 +131,7 @@ body {
 .brand-kicker {
   margin: 3px 0 0;
   opacity: 0.55;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 0.2px;
 }
@@ -347,7 +355,7 @@ body {
 
 .otp-input {
   width: 100%;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 24px;
   letter-spacing: 7px;
   text-align: center;
@@ -399,7 +407,7 @@ body {
 .eyebrow {
   margin: 0;
   color: #a3c9b5;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 1.5px;
 }
@@ -458,7 +466,7 @@ body {
 .brand-footnote {
   margin: 0;
   color: #85ad9b;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
 }
 
@@ -586,7 +594,7 @@ body {
 .auth-divider {
   margin: 28px 0 18px;
   opacity: 0.65;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
 }
 
@@ -601,7 +609,7 @@ footer {
   display: flex;
   justify-content: space-between;
   opacity: 0.55;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
 }
 
@@ -670,7 +678,7 @@ footer span:last-child {
   display: flex;
   align-items: center;
   gap: 11px;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 1px;
 }
@@ -742,7 +750,7 @@ footer span:last-child {
 
 .workspace-copy strong { font-size: 13px; }
 .workspace-copy small { opacity: 0.6; font-size: 11px; }
-.workspace-status { color: var(--color-success); font: 10px 'DM Mono', monospace; text-transform: uppercase; }
+.workspace-status { color: var(--color-success); font: 10px var(--font-mono); text-transform: uppercase; }
 .workspace-arrow { opacity: 0.55; }
 .dashboard-note { display: flex; gap: 8px; margin-top: 32px; opacity: 0.55; font-size: 12px; }
 
@@ -816,7 +824,7 @@ footer span:last-child {
 }
 
 .oauth-mono {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
 }
 
 .oauth-account {
@@ -861,7 +869,7 @@ footer span:last-child {
 .oauth-section-label {
   margin: 0 0 10px;
   opacity: 0.65;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -992,7 +1000,7 @@ footer span:last-child {
 .dash-count {
   margin-left: 6px;
   opacity: 0.55;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
 }
 
@@ -1065,7 +1073,7 @@ footer span:last-child {
 }
 
 .client-row-main strong { font-size: 14px; }
-.client-row-main code { opacity: 0.6; font-family: 'DM Mono', monospace; font-size: 11px; }
+.client-row-main code { opacity: 0.6; font-family: var(--font-mono); font-size: 11px; }
 
 .client-row-meta {
   display: flex;
@@ -1190,7 +1198,7 @@ footer span:last-child {
 }
 
 .dash-check code {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
 }
 
@@ -1264,7 +1272,7 @@ footer span:last-child {
   padding: 2px 8px;
   border-radius: 6px;
   background: var(--color-base-200);
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   overflow-wrap: anywhere;
 }
@@ -1291,7 +1299,7 @@ footer span:last-child {
 .copy-field-value {
   min-width: 0;
   flex: 1;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   overflow-wrap: anywhere;
   user-select: all;
@@ -1390,7 +1398,7 @@ footer span:last-child {
   font-size: 11px;
 }
 
-.session-main small { font-family: 'DM Mono', monospace; }
+.session-main small { font-family: var(--font-mono); }
 .session-meta { text-align: right; }
 
 .session-revoke {
@@ -1445,7 +1453,7 @@ footer span:last-child {
   .auth-shell { display: block; }
   .brand-panel { display: none; }
   .login-panel { min-height: 100vh; padding: 32px; }
-  .mobile-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 64px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px; }
+  .mobile-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 64px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; }
   .mobile-brand .brand-mark { width: 30px; height: 30px; color: var(--color-primary); font-size: 12px; }
   .section-heading h2 { font-size: 25px; }
 }
