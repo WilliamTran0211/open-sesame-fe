@@ -760,6 +760,27 @@ body {
   opacity: 0.5;
 }
 
+/* Closing call to action: the one centered block on the page. */
+.landing-cta {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: clamp(40px, 6vw, 72px) clamp(20px, 4vw, 48px);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  border-radius: var(--radius-box);
+  background: color-mix(in srgb, var(--color-primary) 9%, var(--color-base-100));
+  text-align: center;
+}
+
+.landing-cta .landing-heading,
+.landing-cta .landing-lede {
+  margin-inline: auto;
+}
+
+.landing-cta .btn {
+  margin-top: 24px;
+}
+
 /* Logo wall: logos only, one color so they sit in both themes. */
 .landing-logos {
   display: grid;

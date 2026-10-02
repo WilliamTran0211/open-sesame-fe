@@ -49,6 +49,10 @@
         "description": "Pin exact redirect URIs and rotate client secrets. Refresh tokens rotate on every use, and reusing an old one revokes the whole chain."
       }
     },
+    "cta": {
+      "title": "Give your next app a front door.",
+      "description": "Create an account, register a client, and your app is ready for its first sign-in."
+    },
     "stack": {
       "title": "Yours to run.",
       "description": "The API is FastAPI on PostgreSQL 16 and Redis 7, with a Nuxt front end. One command brings up the API and both databases on your own machine.",
