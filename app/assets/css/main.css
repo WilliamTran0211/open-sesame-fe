@@ -3,8 +3,10 @@
 @import "@fontsource-variable/manrope/wght.css";
 @import "@fontsource/dm-mono/400.css";
 @import "@fontsource/dm-mono/500.css";
+/* Built-in themes stay off: the custom "light"/"dark" below already inherit their
+   tokens, and the built-in [data-theme=light] rule out-specifies the custom one. */
 @plugin "daisyui" {
-  themes: light --default, dark --prefersdark;
+  themes: false;
 }
 @plugin "daisyui/theme" {
   name: "light";
@@ -380,6 +382,11 @@ body {
   letter-spacing: 1.5px;
 }
 
+
+[data-theme="dark"] .theme-icon-moon,
+:root:not([data-theme="dark"]) .theme-icon-sun {
+  display: none;
+}
 
 .auth-theme-toggle {
   position: absolute;

@@ -16,7 +16,8 @@ const label = computed(() =>
     :title="label"
     @click="toggle"
   >
-    <PhSun v-if="isDark" :size="18" aria-hidden="true" />
-    <PhMoon v-else :size="18" aria-hidden="true" />
+    <!-- Picked by CSS from <html data-theme>, which is set before hydration. -->
+    <PhSun class="theme-icon-sun" :size="18" aria-hidden="true" />
+    <PhMoon class="theme-icon-moon" :size="18" aria-hidden="true" />
   </button>
 </template>
