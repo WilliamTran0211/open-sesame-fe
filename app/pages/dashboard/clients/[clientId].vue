@@ -3,6 +3,8 @@ definePageMeta({
   middleware: ["auth"],
 });
 
+import { PhArrowLeft } from "@phosphor-icons/vue";
+
 import type { OAuthClientPayload } from "~/utils/oauth";
 
 type PendingAction = "rotate" | "deactivate" | "activate" | null;
@@ -118,7 +120,8 @@ onMounted(async () => {
 <template>
   <DashboardShell>
     <NuxtLink to="/dashboard/clients" class="dash-back">
-      ← {{ t("clients.back") }}
+      <PhArrowLeft :size="14" aria-hidden="true" />
+      {{ t("clients.back") }}
     </NuxtLink>
 
     <div v-if="loadFailed" class="dash-empty">
@@ -128,16 +131,16 @@ onMounted(async () => {
 
     <div
       v-else-if="!client"
-      class="dash-empty"
-      role="status"
+      class="dashboard-intro"
+      :aria-label="t('common.loading')"
     >
-      <span class="loading loading-spinner loading-md text-primary" />
+      <span class="skeleton block h-10 w-64" aria-hidden="true" />
+      <span class="skeleton mt-4 block h-4 w-48" aria-hidden="true" />
     </div>
 
     <template v-else>
       <div class="dash-page-header">
         <div class="dashboard-intro">
-          <p class="eyebrow">{{ t(`clients.types.${client.client_type}.title`) }}</p>
           <h1>{{ client.name }}</h1>
           <p>
             <span
@@ -145,6 +148,9 @@ onMounted(async () => {
               :class="client.is_active ? 'badge-success' : 'badge-neutral'"
             >
               {{ client.is_active ? t("clients.status.active") : t("clients.status.inactive") }}
+            </span>
+            <span class="badge badge-sm badge-ghost">
+              {{ t(`clients.types.${client.client_type}.title`) }}
             </span>
             {{ t("clients.createdOn", { date: new Date(client.created_at).toLocaleDateString() }) }}
           </p>
@@ -203,7 +209,9 @@ onMounted(async () => {
           <dt>{{ t("clients.form.redirects") }}</dt>
           <dd>
             <code v-for="uri in client.redirect_uris" :key="uri">{{ uri }}</code>
-            <span v-if="!client.redirect_uris.length" class="opacity-60">—</span>
+            <span v-if="!client.redirect_uris.length" class="opacity-70">
+              {{ t("clients.noRedirects") }}
+            </span>
           </dd>
           <dt>{{ t("clients.form.grants") }}</dt>
           <dd>
@@ -212,7 +220,7 @@ onMounted(async () => {
           <dt>{{ t("clients.form.scopes") }}</dt>
           <dd>
             <code v-for="scope in client.allowed_scopes" :key="scope">{{ scope }}</code>
-            <span v-if="!client.allowed_scopes.length" class="opacity-60">
+            <span v-if="!client.allowed_scopes.length" class="opacity-70">
               {{ t("clients.noScopes") }}
             </span>
           </dd>

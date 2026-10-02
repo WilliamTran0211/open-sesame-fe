@@ -15,8 +15,8 @@ onMounted(() => scopesStore.fetchScopes());
 
 <template>
   <div class="scope-picker">
-    <div v-if="scopesStore.isLoading" class="opacity-60" role="status">
-      <span class="loading loading-spinner loading-xs" />
+    <div v-if="scopesStore.isLoading" class="grid gap-3" :aria-label="t('common.loading')">
+      <span v-for="row in 3" :key="row" class="skeleton h-9 w-full" aria-hidden="true" />
     </div>
 
     <div v-else-if="scopesStore.error" role="alert" class="alert alert-error py-2 text-xs">

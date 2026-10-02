@@ -3,6 +3,8 @@ definePageMeta({
   middleware: ["auth"],
 });
 
+import { PhCaretRight, PhPlus } from "@phosphor-icons/vue";
+
 type StatusFilter = "all" | "active" | "inactive";
 
 const clientsStore = useClientsStore();
@@ -40,12 +42,12 @@ onMounted(() => {
   <DashboardShell>
     <div class="dash-page-header">
       <div class="dashboard-intro">
-        <p class="eyebrow">{{ t("clients.eyebrow") }}</p>
         <h1>{{ t("clients.title") }}</h1>
         <p>{{ t("clients.description") }}</p>
       </div>
       <NuxtLink to="/dashboard/clients/new" class="btn btn-primary">
-        + {{ t("clients.new") }}
+        <PhPlus :size="16" weight="bold" aria-hidden="true" />
+        {{ t("clients.new") }}
       </NuxtLink>
     </div>
 
@@ -81,13 +83,19 @@ onMounted(() => {
       </button>
     </div>
 
-    <div
+    <ul
       v-else-if="clientsStore.isLoading && !clientsStore.clients.length"
-      class="dash-empty"
-      role="status"
+      class="client-list"
+      :aria-label="t('common.loading')"
     >
-      <span class="loading loading-spinner loading-md text-primary" />
-    </div>
+      <li v-for="row in 3" :key="row" class="client-row" aria-hidden="true">
+        <span class="skeleton h-[38px] w-[38px]" />
+        <span class="client-row-main">
+          <span class="skeleton h-4 w-40" />
+          <span class="skeleton h-3 w-56" />
+        </span>
+      </li>
+    </ul>
 
     <div v-else-if="!clientsStore.clients.length" class="dash-empty">
       <p class="dash-empty-title">{{ t("clients.empty.title") }}</p>
@@ -127,7 +135,7 @@ onMounted(() => {
             </span>
             <small>{{ new Date(client.created_at).toLocaleDateString() }}</small>
           </span>
-          <span class="workspace-arrow" aria-hidden="true">→</span>
+          <PhCaretRight class="client-row-caret" :size="16" aria-hidden="true" />
         </NuxtLink>
       </li>
     </ul>

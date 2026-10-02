@@ -223,7 +223,6 @@
     }
   },
   "clients": {
-    "eyebrow": "OAUTH CLIENTS",
     "title": "Your apps.",
     "description": "Apps registered here can ask users to sign in with Open Sesame.",
     "new": "New client",
@@ -235,7 +234,8 @@
     "createTitle": "Register an app.",
     "createDescription": "You'll get a client ID, and a secret for confidential apps.",
     "createdOn": "Created {date}",
-    "noScopes": "None — this app can't request any permissions yet.",
+    "noScopes": "None. This app can't request any permissions yet.",
+    "noRedirects": "None",
     "credentials": "Credentials",
     "clientId": "Client ID",
     "secretHidden": "The client secret is stored hashed and can't be shown again. Rotate it if it's lost.",

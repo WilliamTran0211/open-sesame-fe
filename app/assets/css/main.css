@@ -536,7 +536,6 @@ body {
   font-size: 14px;
 }
 
-.workspace-arrow { opacity: 0.72; }
 
 /* OAuth consent */
 .oauth-card {
@@ -750,6 +749,12 @@ body {
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
+  margin-bottom: 32px;
+}
+
+/* The header owns the spacing so its action lines up with the intro text. */
+.dash-page-header .dashboard-intro {
+  margin-bottom: 0;
 }
 
 .dash-page-header .dashboard-intro > p:last-child {
@@ -861,7 +866,9 @@ body {
 .client-row-meta small { opacity: 0.72; font-size: 11px; }
 
 .dash-back {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   margin-bottom: 24px;
   opacity: 0.72;
   color: inherit;
@@ -1216,7 +1223,6 @@ body {
   .dash-search { width: 100%; }
   .client-row { grid-template-columns: auto minmax(0, 1fr) auto; }
   .client-row-meta { grid-column: 2 / -1; flex-wrap: wrap; }
-  .client-row .workspace-arrow,
   .client-row .client-row-caret { grid-column: 3; grid-row: 1; }
   .client-type-options,
   .dash-ttl-grid { grid-template-columns: 1fr; }
@@ -1259,5 +1265,4 @@ body {
   .dashboard-intro { margin-bottom: 32px; }
   .dashboard-intro h1 { font-size: 34px; line-height: 1.1; }
   .dashboard-intro > p:last-child { max-width: 280px; line-height: 1.6; }
-  .workspace-arrow { grid-column: 3; grid-row: 1; }
 }

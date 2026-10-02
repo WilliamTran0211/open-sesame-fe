@@ -3,6 +3,8 @@ definePageMeta({
   middleware: ["auth"],
 });
 
+import { PhArrowLeft } from "@phosphor-icons/vue";
+
 import type { OAuthClientPayload } from "~/utils/oauth";
 
 const clientsStore = useClientsStore();
@@ -27,11 +29,11 @@ onMounted(() => {
 <template>
   <DashboardShell>
     <NuxtLink to="/dashboard/clients" class="dash-back">
-      ← {{ t("clients.back") }}
+      <PhArrowLeft :size="14" aria-hidden="true" />
+      {{ t("clients.back") }}
     </NuxtLink>
 
     <div class="dashboard-intro">
-      <p class="eyebrow">{{ t("clients.eyebrow") }}</p>
       <h1>{{ t("clients.createTitle") }}</h1>
       <p>{{ t("clients.createDescription") }}</p>
     </div>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { PhPlus, PhX } from "@phosphor-icons/vue";
 import { isValidRedirectUri } from "~/utils/oauth";
 
 const props = withDefaults(
@@ -78,12 +79,13 @@ function rowError(value: string) {
         :aria-label="t('clients.form.removeRedirect')"
         @click="remove(index)"
       >
-        ✕
+        <PhX :size="16" aria-hidden="true" />
       </button>
     </div>
 
     <button type="button" class="btn btn-ghost btn-sm self-start" @click="add">
-      + {{ t("clients.form.addRedirect") }}
+      <PhPlus :size="14" weight="bold" aria-hidden="true" />
+      {{ t("clients.form.addRedirect") }}
     </button>
   </div>
 </template>
