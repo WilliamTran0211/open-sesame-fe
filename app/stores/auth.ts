@@ -1,5 +1,11 @@
 import { defineStore } from "pinia";
-import { getErrorMessage, getErrorStatus, type ApiError } from "~/utils/api";
+import {
+  apiErrorMessage,
+  apiFetch,
+  getErrorStatus,
+  tryApi,
+  type ApiError,
+} from "~/utils/api";
 import { isValidEmail } from "~/utils/email";
 import { isPasswordQualified } from "~/utils/password";
 
@@ -102,25 +108,17 @@ export const useAuthStore = defineStore("auth", () => {
 
   async function fetchMe() {
     try {
-      const config = useRuntimeConfig();
-      const profile = await $fetch<AuthUser>(
-        `${config.public.apiBaseUrl}/users/me`,
-        {
-          method: "GET",
-          credentials: "include",
-        },
-      );
+      const profile = await apiFetch<AuthUser>("/users/me");
 
       user.value = profile;
       return profile;
     } catch (requestError) {
-      const status = (requestError as { response?: { status?: number } })
-        ?.response?.status;
+      const status = getErrorStatus(requestError);
 
       user.value = null;
 
       if (status !== 401 && status !== 403) {
-        error.value = getErrorMessage(requestError, t("auth.errors.profile"));
+        error.value = apiErrorMessage(requestError, "auth.errors.profile");
       }
 
       return null;
@@ -158,15 +156,10 @@ export const useAuthStore = defineStore("auth", () => {
     }
 
     try {
-      const config = useRuntimeConfig();
-      const loginResponse = await $fetch<LoginResponse>(
-        `${config.public.apiBaseUrl}/auth/login`,
-        {
-          method: "POST",
-          body: { email: email.trim(), password },
-          credentials: "include",
-        },
-      );
+      const loginResponse = await apiFetch<LoginResponse>("/auth/login", {
+        method: "POST",
+        body: { email: email.trim(), password },
+      });
 
       const challengeId = getChallengeId(loginResponse);
       if (challengeId) {
@@ -200,7 +193,7 @@ export const useAuthStore = defineStore("auth", () => {
         return "unverified";
       }
 
-      error.value = getErrorMessage(requestError, t("auth.errors.signIn"));
+      error.value = apiErrorMessage(requestError, "auth.errors.signIn");
       return "failed";
     }
   }
@@ -216,18 +209,16 @@ export const useAuthStore = defineStore("auth", () => {
 
     isLoading.value = true;
     try {
-      const config = useRuntimeConfig();
-      await $fetch(`${config.public.apiBaseUrl}/auth/login/2fa`, {
+      await apiFetch("/auth/login/2fa", {
         method: "POST",
         body: { challenge_id: challengeId, code: code.trim() },
-        credentials: "include",
       });
 
       mfaChallengeId.value = null;
       clearPendingEmail();
       return !!(await fetchMe());
     } catch (requestError) {
-      error.value = getErrorMessage(requestError, t("auth.errors.mfaVerify"));
+      error.value = apiErrorMessage(requestError, "auth.errors.mfaVerify");
       return false;
     } finally {
       isLoading.value = false;
@@ -235,74 +226,52 @@ export const useAuthStore = defineStore("auth", () => {
   }
 
   // For the email method the API also sends the first code right away.
-  async function setupMfa(method: MfaMethod): Promise<{
-    setup: MfaSetup | null;
-    error: string | null;
-  }> {
-    try {
-      const config = useRuntimeConfig();
-      const setup = await $fetch<MfaSetup>(
-        `${config.public.apiBaseUrl}/users/me/2fa/setup`,
-        { method: "POST", body: { method }, credentials: "include" },
-      );
-      return { setup, error: null };
-    } catch (requestError) {
-      return {
-        setup: null,
-        error: getErrorMessage(requestError, t("profile.mfa.errors.setup")),
-      };
-    }
+  async function setupMfa(method: MfaMethod) {
+    const { data, error: setupError } = await tryApi(
+      () =>
+        apiFetch<MfaSetup>("/users/me/2fa/setup", {
+          method: "POST",
+          body: { method },
+        }),
+      "profile.mfa.errors.setup",
+    );
+
+    return { setup: data, error: setupError };
   }
 
   async function confirmMfa(code: string) {
-    try {
-      const config = useRuntimeConfig();
-      const result = await $fetch<{ recovery_codes: string[] }>(
-        `${config.public.apiBaseUrl}/users/me/2fa/confirm`,
-        {
+    const { data, error: confirmError } = await tryApi(
+      () =>
+        apiFetch<{ recovery_codes: string[] }>("/users/me/2fa/confirm", {
           method: "POST",
           body: { code },
-          credentials: "include",
-        },
-      );
-      return { recoveryCodes: result.recovery_codes, error: null };
-    } catch (requestError) {
-      return {
-        recoveryCodes: [],
-        error: getErrorMessage(requestError, t("profile.mfa.errors.confirm")),
-      };
-    }
+        }),
+      "profile.mfa.errors.confirm",
+    );
+
+    return { recoveryCodes: data?.recovery_codes ?? [], error: confirmError };
   }
 
   // Emails a fresh code for the email method (setup resend or disabling);
   // the API ignores it for authenticator apps.
   async function requestMfaCode() {
-    try {
-      const config = useRuntimeConfig();
-      await $fetch(`${config.public.apiBaseUrl}/users/me/2fa/request-code`, {
-        method: "POST",
-        credentials: "include",
-      });
-      return null;
-    } catch (requestError) {
-      return getErrorStatus(requestError) === 429
-        ? t("auth.errors.resendLimited")
-        : getErrorMessage(requestError, t("profile.mfa.errors.sendCode"));
-    }
+    const result = await tryApi(
+      () => apiFetch("/users/me/2fa/request-code", { method: "POST" }),
+      "profile.mfa.errors.sendCode",
+      { 429: "auth.errors.resendLimited" },
+    );
+
+    return result.error;
   }
 
   async function disableMfa(code: string) {
-    try {
-      const config = useRuntimeConfig();
-      await $fetch(`${config.public.apiBaseUrl}/users/me/2fa/disable`, {
-        method: "POST",
-        body: { code },
-        credentials: "include",
-      });
-      return null;
-    } catch (requestError) {
-      return getErrorMessage(requestError, t("profile.mfa.errors.disable"));
-    }
+    const result = await tryApi(
+      () =>
+        apiFetch("/users/me/2fa/disable", { method: "POST", body: { code } }),
+      "profile.mfa.errors.disable",
+    );
+
+    return result.error;
   }
 
   async function register(
@@ -339,15 +308,13 @@ export const useAuthStore = defineStore("auth", () => {
     }
 
     try {
-      const config = useRuntimeConfig();
-      await $fetch(`${config.public.apiBaseUrl}/users/register`, {
+      await apiFetch("/users/register", {
         method: "POST",
         body: {
           full_name: fullName.trim(),
           email: email.trim(),
           password,
         },
-        credentials: "include",
       });
 
       // Registering doesn't sign in; the account must be verified by OTP first.
@@ -356,7 +323,7 @@ export const useAuthStore = defineStore("auth", () => {
       isLoading.value = false;
       return true;
     } catch (requestError) {
-      error.value = getErrorMessage(requestError, t("auth.errors.register"));
+      error.value = apiErrorMessage(requestError, "auth.errors.register");
       isLoading.value = false;
       return false;
     }
@@ -373,17 +340,15 @@ export const useAuthStore = defineStore("auth", () => {
     }
 
     try {
-      const config = useRuntimeConfig();
-      await $fetch(`${config.public.apiBaseUrl}/users/verify`, {
+      await apiFetch("/users/verify", {
         method: "POST",
         body: { email: pendingEmail.value, otp },
-        credentials: "include",
       });
 
       isLoading.value = false;
       return true;
     } catch (requestError) {
-      error.value = getErrorMessage(requestError, t("auth.errors.verify"));
+      error.value = apiErrorMessage(requestError, "auth.errors.verify");
       isLoading.value = false;
       return false;
     }
@@ -392,25 +357,18 @@ export const useAuthStore = defineStore("auth", () => {
   async function resendVerification() {
     error.value = "";
 
-    try {
-      const config = useRuntimeConfig();
-      await $fetch(`${config.public.apiBaseUrl}/users/verify/resend`, {
-        method: "POST",
-        body: { email: pendingEmail.value },
-        credentials: "include",
-      });
+    const result = await tryApi(
+      () =>
+        apiFetch("/users/verify/resend", {
+          method: "POST",
+          body: { email: pendingEmail.value },
+        }),
+      "auth.errors.resend",
+      { 429: "auth.errors.resendLimited" },
+    );
 
-      return true;
-    } catch (requestError) {
-      const status = (requestError as { response?: { status?: number } })
-        ?.response?.status;
-
-      error.value =
-        status === 429
-          ? t("auth.errors.resendLimited")
-          : getErrorMessage(requestError, t("auth.errors.resend"));
-      return false;
-    }
+    error.value = result.error ?? "";
+    return !result.error;
   }
 
   // Profile forms keep their own loading/error state, so these return the outcome
@@ -420,77 +378,61 @@ export const useAuthStore = defineStore("auth", () => {
     email?: string;
   }) {
     const previousEmail = user.value?.email;
+    const { data: profile, error: updateError } = await tryApi(
+      () => apiFetch<AuthUser>("/users/me", { method: "PATCH", body: changes }),
+      "profile.errors.update",
+      { 409: "profile.errors.emailTaken" },
+    );
 
-    try {
-      const config = useRuntimeConfig();
-      const profile = await $fetch<AuthUser>(
-        `${config.public.apiBaseUrl}/users/me`,
-        {
-          method: "PATCH",
-          body: changes,
-          credentials: "include",
-        },
-      );
-
-      user.value = profile;
-      const emailChanged = !!profile.email && profile.email !== previousEmail;
-
-      // The API resets verification and emails an OTP to the new address.
-      if (emailChanged && profile.email) {
-        setPendingEmail(profile.email);
-      }
-
-      return { error: null, emailChanged };
-    } catch (requestError) {
-      return {
-        error:
-          getErrorStatus(requestError) === 409
-            ? t("profile.errors.emailTaken")
-            : getErrorMessage(requestError, t("profile.errors.update")),
-        emailChanged: false,
-      };
+    if (!profile) {
+      return { error: updateError, emailChanged: false };
     }
+
+    user.value = profile;
+    const emailChanged = !!profile.email && profile.email !== previousEmail;
+
+    // The API resets verification and emails an OTP to the new address.
+    if (emailChanged && profile.email) {
+      setPendingEmail(profile.email);
+    }
+
+    return { error: null, emailChanged };
   }
 
   async function changePassword(currentPassword: string, newPassword: string) {
-    try {
-      const config = useRuntimeConfig();
-      await $fetch(`${config.public.apiBaseUrl}/users/me/change-password`, {
-        method: "POST",
-        body: {
-          current_password: currentPassword,
-          new_password: newPassword,
-        },
-        credentials: "include",
-      });
-
-      return null;
-    } catch (requestError) {
+    const result = await tryApi(
+      () =>
+        apiFetch("/users/me/change-password", {
+          method: "POST",
+          body: {
+            current_password: currentPassword,
+            new_password: newPassword,
+          },
+        }),
+      "profile.errors.password",
       // The API answers a wrong current password with 400 validation_error.
-      return getErrorStatus(requestError) === 400
-        ? t("profile.errors.wrongPassword")
-        : getErrorMessage(requestError, t("profile.errors.password"));
-    }
+      { 400: "profile.errors.wrongPassword" },
+    );
+
+    return result.error;
   }
 
   // Password reset runs signed out, so like the profile forms these return the
   // error (or null) and leave the shared `error` alone.
   async function requestPasswordReset(email: string) {
-    try {
-      const config = useRuntimeConfig();
-      // The API answers the same way for unknown emails, so this never reveals
-      // whether an account exists.
-      await $fetch(`${config.public.apiBaseUrl}/users/reset-password`, {
-        method: "POST",
-        body: { email: email.trim().toLowerCase() },
-      });
+    // The API answers the same way for unknown emails, so this never reveals
+    // whether an account exists.
+    const result = await tryApi(
+      () =>
+        apiFetch("/users/reset-password", {
+          method: "POST",
+          body: { email: email.trim().toLowerCase() },
+        }),
+      "auth.reset.errors.request",
+      { 429: "auth.errors.resendLimited" },
+    );
 
-      return null;
-    } catch (requestError) {
-      return getErrorStatus(requestError) === 429
-        ? t("auth.errors.resendLimited")
-        : getErrorMessage(requestError, t("auth.reset.errors.request"));
-    }
+    return result.error;
   }
 
   async function confirmPasswordReset(
@@ -498,47 +440,37 @@ export const useAuthStore = defineStore("auth", () => {
     otp: string,
     newPassword: string,
   ) {
-    try {
-      const config = useRuntimeConfig();
-      await $fetch(`${config.public.apiBaseUrl}/users/reset-password/confirm`, {
-        method: "POST",
-        body: {
-          email: email.trim().toLowerCase(),
-          otp,
-          new_password: newPassword,
-        },
-      });
-
-      return null;
-    } catch (requestError) {
+    const result = await tryApi(
+      () =>
+        apiFetch("/users/reset-password/confirm", {
+          method: "POST",
+          body: {
+            email: email.trim().toLowerCase(),
+            otp,
+            new_password: newPassword,
+          },
+        }),
+      "auth.reset.errors.confirm",
       // A wrong or expired code comes back as 400 validation_error.
-      return getErrorStatus(requestError) === 400
-        ? t("auth.reset.errors.invalidCode")
-        : getErrorMessage(requestError, t("auth.reset.errors.confirm"));
-    }
+      { 400: "auth.reset.errors.invalidCode" },
+    );
+
+    return result.error;
   }
 
-  async function listSessions() {
-    const config = useRuntimeConfig();
-    return await $fetch<UserSession[]>(
-      `${config.public.apiBaseUrl}/auth/sessions`,
-      {
-        method: "GET",
-        credentials: "include",
-      },
-    );
+  function listSessions() {
+    return apiFetch<UserSession[]>("/auth/sessions");
   }
 
   // Ends every session, including this one, so the caller must send the user to sign in.
   async function revokeAllSessions() {
-    try {
-      const config = useRuntimeConfig();
-      await $fetch(`${config.public.apiBaseUrl}/auth/sessions/revoke-all`, {
-        method: "POST",
-        credentials: "include",
-      });
-    } catch (requestError) {
-      return getErrorMessage(requestError, t("profile.sessions.errors.revoke"));
+    const result = await tryApi(
+      () => apiFetch("/auth/sessions/revoke-all", { method: "POST" }),
+      "profile.sessions.errors.revoke",
+    );
+
+    if (result.error) {
+      return result.error;
     }
 
     user.value = null;
@@ -550,16 +482,11 @@ export const useAuthStore = defineStore("auth", () => {
     error.value = "";
 
     try {
-      const config = useRuntimeConfig();
-      await $fetch(`${config.public.apiBaseUrl}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      await apiFetch("/auth/logout", { method: "POST" });
     } catch (requestError) {
-      const status = (requestError as { response?: { status?: number } })
-        ?.response?.status;
+      const status = getErrorStatus(requestError);
       if (status !== 404 && status !== 422) {
-        error.value = getErrorMessage(requestError, t("auth.errors.signOut"));
+        error.value = apiErrorMessage(requestError, "auth.errors.signOut");
       }
     } finally {
       user.value = null;

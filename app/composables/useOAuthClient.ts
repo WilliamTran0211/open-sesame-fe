@@ -1,3 +1,4 @@
+import { apiFetch } from "~/utils/api";
 import type { OAuthClientInfo } from "~/utils/oauth";
 
 // Looks up the app asking for access so the consent screen can name it.
@@ -11,13 +12,8 @@ export function useOAuthClient() {
     isLoading.value = true;
 
     try {
-      const config = useRuntimeConfig();
-      client.value = await $fetch<OAuthClientInfo>(
-        `${config.public.apiBaseUrl}/clients/${encodeURIComponent(clientId)}`,
-        {
-          method: "GET",
-          credentials: "include",
-        },
+      client.value = await apiFetch<OAuthClientInfo>(
+        `/clients/${encodeURIComponent(clientId)}`,
       );
     } catch {
       client.value = null;

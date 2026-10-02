@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { getErrorMessage } from "~/utils/api";
+import { apiFetch, trackRequest } from "~/utils/api";
 import type { OAuthScope } from "~/utils/oauth";
 
 // Active scopes a client may be granted. Readable by any signed-in user;
@@ -11,29 +11,20 @@ export const useScopesStore = defineStore("scopes", () => {
   const loaded = ref(false);
   const error = ref("");
 
-  function t(key: string) {
-    return useNuxtApp().$i18n.t(key);
-  }
-
   async function fetchScopes(force = false) {
     if ((loaded.value && !force) || isLoading.value) {
       return;
     }
 
-    const config = useRuntimeConfig();
-    isLoading.value = true;
-    error.value = "";
+    const list = await trackRequest(
+      { pending: isLoading, error },
+      () => apiFetch<OAuthScope[]>("/scopes/list"),
+      "scopes.errors.load",
+    );
 
-    try {
-      scopes.value = await $fetch<OAuthScope[]>(
-        `${config.public.apiBaseUrl}/scopes/list`,
-        { credentials: "include" },
-      );
+    if (list) {
+      scopes.value = list;
       loaded.value = true;
-    } catch (requestError) {
-      error.value = getErrorMessage(requestError, t("scopes.errors.load"));
-    } finally {
-      isLoading.value = false;
     }
   }
 
@@ -44,28 +35,21 @@ export const useScopesStore = defineStore("scopes", () => {
     body: object | undefined,
     fallbackKey: string,
   ) {
-    const config = useRuntimeConfig();
-    isSaving.value = true;
-    error.value = "";
+    const scope = await trackRequest(
+      { pending: isSaving, error },
+      () => apiFetch<OAuthScope>(`/scopes${path}`, { method, body }),
+      fallbackKey,
+    );
 
-    try {
-      const scope = await $fetch<OAuthScope>(
-        `${config.public.apiBaseUrl}/scopes${path}`,
-        { method, body, credentials: "include" },
-      );
+    if (scope) {
       const others = scopes.value.filter((item) => item.name !== scope.name);
 
       scopes.value = scope.is_active
         ? [...others, scope].sort((a, b) => a.name.localeCompare(b.name))
         : others;
-
-      return scope;
-    } catch (requestError) {
-      error.value = getErrorMessage(requestError, t(fallbackKey));
-      return null;
-    } finally {
-      isSaving.value = false;
     }
+
+    return scope;
   }
 
   function createScope(name: string, description: string) {

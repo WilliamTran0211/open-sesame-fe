@@ -1,5 +1,10 @@
 import { defineStore } from "pinia";
-import { getErrorMessage, getErrorStatus } from "~/utils/api";
+import {
+  apiFetch,
+  getErrorStatus,
+  trackRequest,
+  type ApiRequestOptions,
+} from "~/utils/api";
 import type { OAuthClient, OAuthClientPayload } from "~/utils/oauth";
 
 type RevealedSecret = {
@@ -16,22 +21,9 @@ export const useClientsStore = defineStore("clients", () => {
   // detail page has shown it, then drop it.
   const revealedSecret = ref<RevealedSecret | null>(null);
 
-  function t(key: string) {
-    return useNuxtApp().$i18n.t(key);
-  }
-
-  async function request<T>(
-    path: string,
-    options: { method?: "GET" | "POST" | "PATCH" | "DELETE"; body?: object } = {},
-  ) {
-    const config = useRuntimeConfig();
-
+  async function request<T>(path: string, options: ApiRequestOptions = {}) {
     try {
-      return await $fetch<T>(`${config.public.apiBaseUrl}/clients${path}`, {
-        method: options.method || "GET",
-        body: options.body,
-        credentials: "include",
-      });
+      return await apiFetch<T>(`/clients${path}`, options);
     } catch (requestError) {
       // Client management is session-only; an expired session means signing in again.
       if (getErrorStatus(requestError) === 401) {
@@ -63,51 +55,33 @@ export const useClientsStore = defineStore("clients", () => {
   }
 
   async function fetchClients() {
-    isLoading.value = true;
-    error.value = "";
+    const list = await trackRequest(
+      { pending: isLoading, error },
+      () => request<OAuthClient[]>("/"),
+      "clients.errors.load",
+    );
 
-    try {
-      clients.value = await request<OAuthClient[]>("/");
-    } catch (requestError) {
-      error.value = getErrorMessage(requestError, t("clients.errors.load"));
-    } finally {
-      isLoading.value = false;
+    if (list) {
+      clients.value = list;
     }
   }
 
   async function fetchClient(clientId: string) {
-    isLoading.value = true;
-    error.value = "";
+    const client = await trackRequest(
+      { pending: isLoading, error },
+      () => request<OAuthClient>(`/${encodeURIComponent(clientId)}`),
+      "clients.errors.loadOne",
+    );
 
-    try {
-      const client = await request<OAuthClient>(
-        `/${encodeURIComponent(clientId)}`,
-      );
+    if (client) {
       upsert(client);
-      return client;
-    } catch (requestError) {
-      error.value = getErrorMessage(requestError, t("clients.errors.loadOne"));
-      return null;
-    } finally {
-      isLoading.value = false;
     }
+
+    return client;
   }
 
-  async function mutate<T>(
-    action: () => Promise<T>,
-    fallbackKey: string,
-  ): Promise<T | null> {
-    isSaving.value = true;
-    error.value = "";
-
-    try {
-      return await action();
-    } catch (requestError) {
-      error.value = getErrorMessage(requestError, t(fallbackKey));
-      return null;
-    } finally {
-      isSaving.value = false;
-    }
+  function mutate<T>(action: () => Promise<T>, fallbackKey: string) {
+    return trackRequest({ pending: isSaving, error }, action, fallbackKey);
   }
 
   function createClient(payload: OAuthClientPayload) {
