@@ -22,6 +22,8 @@ const { t } = useI18n();
 const isDark = useState<boolean>("theme.isDark");
 const { client, isLoading: isClientLoading, load: loadClient } = useOAuthClient();
 
+const scopesStore = useScopesStore();
+
 const parsed = computed(() => parseAuthorizeRequest(route.query));
 const request = computed(() => parsed.value.request);
 const consentState = ref<ConsentState>("ready");
@@ -29,6 +31,17 @@ const appName = computed(
   () => client.value?.name || request.value?.clientId || "",
 );
 const userName = computed(() => auth.getDisplayName(auth.user));
+// The API grants only requested ∩ allowed. When we can see the client's allow-list
+// (its owner), show exactly what will be granted instead of what was asked for.
+const grantedScopes = computed(() => {
+  const requested = request.value?.scopes || [];
+  const allowed = client.value?.allowed_scopes;
+
+  return allowed ? requested.filter((scope) => allowed.includes(scope)) : requested;
+});
+const scopesNarrowed = computed(
+  () => grantedScopes.value.length < (request.value?.scopes.length || 0),
+);
 const clientInactive = computed(() => client.value?.is_active === false);
 
 function allow() {
@@ -63,6 +76,8 @@ async function switchAccount() {
 }
 
 onMounted(() => {
+  scopesStore.fetchScopes();
+
   if (request.value) {
     loadClient(request.value.clientId);
   }
@@ -138,7 +153,10 @@ onMounted(() => {
           <p class="oauth-section-label">
             {{ t("oauth.permissionsLabel", { app: appName }) }}
           </p>
-          <OAuthScopeList :scopes="request.scopes" />
+          <OAuthScopeList :scopes="grantedScopes" />
+          <p v-if="scopesNarrowed" class="dash-field-hint">
+            {{ t("oauth.scopesNarrowed", { app: appName }) }}
+          </p>
         </div>
 
         <div

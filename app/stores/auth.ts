@@ -15,6 +15,7 @@ type AuthUser = {
   username?: string;
   avatar?: string | null;
   role?: string;
+  is_superuser?: boolean;
   [key: string]: unknown;
 };
 

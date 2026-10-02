@@ -13,10 +13,13 @@ const props = withDefaults(
 );
 
 const { t } = useI18n();
+const scopesStore = useScopesStore();
 
 const items = computed(() => {
   const requested = props.scopes.map((scope) => {
     const known = SCOPE_CATALOG[scope];
+
+    const defined = scopesStore.findScope(scope);
 
     return known
       ? {
@@ -29,7 +32,8 @@ const items = computed(() => {
           key: scope,
           level: "custom" as const,
           title: t("oauth.scopes.custom.title", { scope }),
-          description: t("oauth.scopes.custom.description"),
+          // Scopes registered on the server carry their own user-facing description.
+          description: defined?.description || t("oauth.scopes.custom.description"),
         };
   });
 

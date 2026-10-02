@@ -41,6 +41,7 @@ const redirectUris = ref<string[]>(
 );
 const clientType = ref<ClientType>(props.initial?.client_type || "confidential");
 const grantTypes = ref<GrantType[]>(toGrantTypes(props.initial?.grant_types));
+const allowedScopes = ref<string[]>([...(props.initial?.allowed_scopes || [])]);
 const requirePkce = ref(props.initial?.require_pkce ?? true);
 const accessTokenTtl = ref(props.initial?.access_token_ttl?.toString() || "");
 const refreshTokenTtl = ref(props.initial?.refresh_token_ttl?.toString() || "");
@@ -113,6 +114,7 @@ function submit() {
     name: name.value.trim(),
     redirect_uris: cleanedUris.value,
     grant_types: grantTypes.value,
+    allowed_scopes: allowedScopes.value,
     client_type: clientType.value,
     require_pkce: isPublic.value ? true : requirePkce.value,
     access_token_ttl: parseTtl(accessTokenTtl.value),
@@ -201,6 +203,12 @@ function submit() {
         {{ errors.grants }}
       </p>
     </fieldset>
+
+    <div class="dash-field">
+      <span class="dash-label">{{ t("clients.form.scopes") }}</span>
+      <p class="dash-field-hint">{{ t("clients.form.scopesHint") }}</p>
+      <ScopePicker v-model="allowedScopes" />
+    </div>
 
     <label class="dash-check">
       <input

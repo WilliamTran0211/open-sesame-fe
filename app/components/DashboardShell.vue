@@ -11,6 +11,9 @@ const isDark = useState<boolean>("theme.isDark");
 const links = computed(() => [
   { to: "/dashboard", label: t("dashboard.nav.overview"), exact: true },
   { to: "/dashboard/clients", label: t("dashboard.nav.clients"), exact: false },
+  ...(auth.user?.is_superuser
+    ? [{ to: "/dashboard/scopes", label: t("dashboard.nav.scopes"), exact: false }]
+    : []),
   { to: "/dashboard/profile", label: t("dashboard.nav.profile"), exact: true },
 ]);
 

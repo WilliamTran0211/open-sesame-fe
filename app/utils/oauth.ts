@@ -13,6 +13,14 @@ export const SCOPE_CATALOG: Record<string, { level: ScopeLevel }> = {
   offline_access: { level: "sensitive" },
 };
 
+// Mirrors the API's ScopeResponseSchema (GET /scopes/list).
+export type OAuthScope = {
+  name: string;
+  description: string;
+  is_active: boolean;
+  created_at: string;
+};
+
 export type ClientType = "confidential" | "public";
 
 export const GRANT_TYPES = [
@@ -28,6 +36,7 @@ export type OAuthClientInfo = {
   name: string;
   client_type: ClientType;
   redirect_uris: string[];
+  allowed_scopes?: string[];
   is_active: boolean;
 };
 
@@ -35,6 +44,7 @@ export type OAuthClientInfo = {
 export type OAuthClient = OAuthClientInfo & {
   id: string;
   grant_types: string[];
+  allowed_scopes: string[];
   require_pkce: boolean;
   access_token_ttl: number | null;
   refresh_token_ttl: number | null;
@@ -46,6 +56,7 @@ export type OAuthClientPayload = {
   name: string;
   redirect_uris: string[];
   grant_types: GrantType[];
+  allowed_scopes: string[];
   client_type: ClientType;
   require_pkce: boolean;
   access_token_ttl: number | null;

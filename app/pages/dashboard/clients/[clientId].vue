@@ -29,7 +29,7 @@ const authorizeExample = computed(() => {
     response_type: "code",
     client_id: client.value.client_id,
     redirect_uri: client.value.redirect_uris[0] || "https://app.example.com/callback",
-    scope: "openid profile email",
+    scope: client.value.allowed_scopes.join(" "),
     state: "<random-state>",
   });
 
@@ -208,6 +208,13 @@ onMounted(async () => {
           <dt>{{ t("clients.form.grants") }}</dt>
           <dd>
             <code v-for="grant in client.grant_types" :key="grant">{{ grant }}</code>
+          </dd>
+          <dt>{{ t("clients.form.scopes") }}</dt>
+          <dd>
+            <code v-for="scope in client.allowed_scopes" :key="scope">{{ scope }}</code>
+            <span v-if="!client.allowed_scopes.length" class="opacity-60">
+              {{ t("clients.noScopes") }}
+            </span>
           </dd>
           <dt>{{ t("clients.form.pkce") }}</dt>
           <dd>{{ client.require_pkce ? t("clients.yes") : t("clients.no") }}</dd>

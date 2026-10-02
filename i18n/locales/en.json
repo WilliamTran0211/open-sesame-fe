@@ -98,6 +98,7 @@
     "account": {
       "switch": "Not you?"
     },
+    "scopesNarrowed": "{app} asked for more, but is only allowed the permissions above.",
     "scopes": {
       "sensitiveBadge": "Sensitive",
       "identity": {
@@ -144,12 +145,43 @@
       "label": "Dashboard",
       "overview": "Overview",
       "clients": "OAuth clients",
+      "scopes": "Scopes",
       "profile": "Profile"
     },
     "clientsCard": {
       "title": "OAuth clients",
       "description": "Register apps that sign users in with Open Sesame.",
       "count": "{count} active"
+    }
+  },
+  "scopes": {
+    "empty": "No scopes are available yet.",
+    "stale": "No longer available — uncheck to remove.",
+    "eyebrow": "SCOPES",
+    "title": "Permissions.",
+    "description": "Scopes clients can be allowed to request. Descriptions are shown to users on the consent screen.",
+    "new": "New scope",
+    "name": "Name",
+    "namePlaceholder": "read:profile",
+    "nameRequired": "Enter a scope name.",
+    "nameInvalid": "Use letters, numbers and : . _ - only, up to 100 characters.",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "See your profile",
+    "descriptionRequired": "Enter a description users will understand.",
+    "create": "Create scope",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "deactivate": {
+      "title": "Deactivate scope",
+      "message": "Clients can no longer be given \"{name}\". Clients already using it keep it until they are edited.",
+      "confirm": "Deactivate"
+    },
+    "errors": {
+      "load": "Unable to load the available scopes.",
+      "create": "Unable to create the scope.",
+      "update": "Unable to update the scope.",
+      "deactivate": "Unable to deactivate the scope."
     }
   },
   "clients": {
@@ -165,6 +197,7 @@
     "createTitle": "Register an app.",
     "createDescription": "You'll get a client ID, and a secret for confidential apps.",
     "createdOn": "Created {date}",
+    "noScopes": "None — this app can't request any permissions yet.",
     "credentials": "Credentials",
     "clientId": "Client ID",
     "secretHidden": "The client secret is stored hashed and can't be shown again. Rotate it if it's lost.",
@@ -256,6 +289,8 @@
       "removeRedirect": "Remove redirect URI",
       "grants": "Grant types",
       "grantsRequired": "Choose at least one grant type.",
+      "scopes": "Allowed scopes",
+      "scopesHint": "Permissions this app may request. Requests for anything else are rejected.",
       "pkce": "Require PKCE",
       "pkceHint": "Recommended. Protects the authorization code if it's intercepted.",
       "pkcePublic": "Always on for public clients.",

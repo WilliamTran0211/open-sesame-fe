@@ -1199,6 +1199,11 @@ footer span:last-child {
   opacity: 0.45;
 }
 
+.scope-picker {
+  display: flex;
+  flex-direction: column;
+}
+
 .redirect-list {
   display: flex;
   flex-direction: column;
