@@ -3,6 +3,7 @@ definePageMeta({
   middleware: ["guest"],
 });
 
+import { PhArrowRight } from "@phosphor-icons/vue";
 import { isValidEmail } from "~/utils/email";
 import { resolveLoginRedirect } from "~/utils/oauth";
 
@@ -19,7 +20,6 @@ const returnTo = computed(() =>
 );
 const email = ref("");
 const password = ref("");
-const rememberDevice = ref(false);
 const submitted = ref(false);
 const emailIsValid = computed(() => isValidEmail(email.value));
 const emailError = computed(() => submitted.value && !emailIsValid.value);
@@ -61,28 +61,28 @@ onMounted(() => {
 
     <AuthPanel
       heading-id="login-title"
-      title="Open the door!"
-      description="Sign in to continue to your workspace."
+      :title="t('auth.login.title')"
+      :description="t('auth.login.description')"
     >
       <form class="auth-form" @submit.prevent="signIn">
         <FormField
           v-model="email"
           id="email"
-          label="Email"
+          :label="t('auth.email')"
           type="email"
           autocomplete="email"
-          placeholder="you@company.com"
+          :placeholder="t('auth.emailPlaceholder')"
           :error="emailError"
-          error-message="Enter a valid email address."
+          :error-message="t('auth.errors.invalidEmail')"
         />
 
         <FormField
           v-model="password"
           id="password"
-          label="Password"
+          :label="t('auth.password')"
           type="password"
           autocomplete="current-password"
-          placeholder="Enter your password"
+          :placeholder="t('auth.login.passwordPlaceholder')"
           :error="submitted && !password"
           show-password-toggle
         >
@@ -95,20 +95,10 @@ onMounted(() => {
                   redirect: returnTo || undefined,
                 },
               }"
-              >Forgot password?</NuxtLink
+              >{{ t("auth.login.forgot") }}</NuxtLink
             >
           </template>
         </FormField>
-
-        <label class="remember-option cursor-pointer">
-          <input
-            v-model="rememberDevice"
-            id="remember"
-            type="checkbox"
-            class="checkbox checkbox-primary"
-          />
-          <span>Remember me</span>
-        </label>
 
         <div
           v-if="auth.error"
@@ -137,33 +127,26 @@ onMounted(() => {
         <button
           type="submit"
           class="btn btn-primary w-full"
-          :class="{ loading: auth.isLoading }"
           :disabled="auth.isLoading"
         >
-          Continue <span aria-hidden="true">→</span>
+          <span v-if="auth.isLoading" class="loading loading-spinner loading-xs" />
+          {{ t("auth.login.submit") }}
+          <PhArrowRight v-if="!auth.isLoading" :size="16" weight="bold" aria-hidden="true" />
         </button>
       </form>
 
-      <div class="divider auth-divider">OR</div>
-      <button type="button" class="btn btn-outline w-full">
-        Continue with SSO
-      </button>
-
       <p class="help-text">
-        New here?
+        {{ t("auth.login.newHere") }}
         <NuxtLink
           :to="{
             path: '/register',
             query: { redirect: returnTo || undefined },
           }"
-          >Create an account</NuxtLink
+          >{{ t("auth.createAccount") }}</NuxtLink
         >
       </p>
     </AuthPanel>
 
-    <footer class="login-footer">
-      <span>© 2026 Open Sesame</span>
-      <span><a href="#">Privacy</a><a href="#">Status</a></span>
-    </footer>
+    <AuthFooter />
   </main>
 </template>

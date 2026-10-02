@@ -3,6 +3,7 @@ definePageMeta({
   middleware: ["guest"],
 });
 
+import { PhArrowRight } from "@phosphor-icons/vue";
 import { isValidEmail } from "~/utils/email";
 import { resolveLoginRedirect } from "~/utils/oauth";
 import { isPasswordQualified } from "~/utils/password";
@@ -175,7 +176,8 @@ onBeforeUnmount(() => {
           class="btn btn-primary w-full"
           :disabled="isLoading"
         >
-          {{ t("auth.reset.send") }} <span aria-hidden="true">→</span>
+          {{ t("auth.reset.send") }}
+          <PhArrowRight :size="16" weight="bold" aria-hidden="true" />
         </button>
       </form>
 
@@ -253,7 +255,8 @@ onBeforeUnmount(() => {
           class="btn btn-primary w-full"
           :disabled="isLoading"
         >
-          {{ t("auth.reset.submit") }} <span aria-hidden="true">→</span>
+          {{ t("auth.reset.submit") }}
+          <PhArrowRight :size="16" weight="bold" aria-hidden="true" />
         </button>
       </form>
 
@@ -273,13 +276,10 @@ onBeforeUnmount(() => {
         </button>
         <br />
         {{ t("auth.verify.wrongEmail") }}
-        <a href="#" @click.prevent="changeEmail">{{ t("auth.verify.editEmail") }}</a>
+        <button type="button" class="link link-primary no-underline hover:underline" @click="changeEmail">{{ t("auth.verify.editEmail") }}</button>
       </p>
     </AuthPanel>
 
-    <footer class="login-footer">
-      <span>© 2026 Open Sesame</span>
-      <span><a href="#">Privacy</a><a href="#">Status</a></span>
-    </footer>
+    <AuthFooter />
   </main>
 </template>

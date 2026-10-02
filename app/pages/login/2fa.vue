@@ -10,6 +10,7 @@ definePageMeta({
   ],
 });
 
+import { PhArrowRight } from "@phosphor-icons/vue";
 import { resolveLoginRedirect } from "~/utils/oauth";
 
 const auth = useAuthStore();
@@ -66,10 +67,11 @@ async function verify() {
         <button
           type="submit"
           class="btn btn-primary w-full"
-          :class="{ loading: auth.isLoading }"
           :disabled="auth.isLoading"
         >
-          {{ t("auth.mfa.submit") }} <span aria-hidden="true">→</span>
+          <span v-if="auth.isLoading" class="loading loading-spinner loading-xs" />
+          {{ t("auth.mfa.submit") }}
+          <PhArrowRight v-if="!auth.isLoading" :size="16" weight="bold" aria-hidden="true" />
         </button>
       </form>
 

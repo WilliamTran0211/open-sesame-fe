@@ -5,9 +5,14 @@ definePageMeta({
 
 
 
+const { t } = useI18n();
+let redirectTimer: number | undefined;
+
 onMounted(() => {
-  window.setTimeout(() => navigateTo("/dashboard"), 1200);
+  redirectTimer = window.setTimeout(() => navigateTo("/dashboard"), 1200);
 });
+
+onBeforeUnmount(() => window.clearTimeout(redirectTimer));
 </script>
 
 <template>
@@ -16,13 +21,13 @@ onMounted(() => {
 
     <AuthPanel
       heading-id="success-title"
-      title="You're in."
-      description="Your workspace is ready. Taking you there now."
+      :title="t('auth.success.title')"
+      :description="t('auth.success.description')"
       card-class="success-card"
     >
       <div class="success-state" role="status" aria-live="polite">
         <span class="loading loading-spinner loading-md" />
-        <span>Opening your workspace...</span>
+        <span>{{ t("auth.success.opening") }}</span>
       </div>
     </AuthPanel>
   </main>

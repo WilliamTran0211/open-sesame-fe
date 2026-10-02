@@ -3,6 +3,7 @@ definePageMeta({
   middleware: ["auth"],
 });
 
+import { PhArrowRight } from "@phosphor-icons/vue";
 import {
   buildAuthorizeUrl,
   buildDeniedUrl,
@@ -173,15 +174,13 @@ onMounted(() => {
             :disabled="consentState === 'redirecting' || clientInactive"
             @click="allow"
           >
-            {{ t("oauth.allow") }} <span aria-hidden="true">→</span>
+            {{ t("oauth.allow") }}
+            <PhArrowRight :size="16" weight="bold" aria-hidden="true" />
           </button>
         </div>
       </div>
     </AuthPanel>
 
-    <footer class="login-footer">
-      <span>© 2026 Open Sesame</span>
-      <span><a href="#">Privacy</a><a href="#">Status</a></span>
-    </footer>
+    <AuthFooter />
   </main>
 </template>

@@ -11,6 +11,7 @@ definePageMeta({
   ],
 });
 
+import { PhArrowRight } from "@phosphor-icons/vue";
 import { resolveLoginRedirect } from "~/utils/oauth";
 
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -171,10 +172,11 @@ onBeforeUnmount(() => {
         <button
           type="submit"
           class="btn btn-primary w-full"
-          :class="{ loading: auth.isLoading }"
           :disabled="auth.isLoading"
         >
-          {{ t("auth.verify.submit") }} <span aria-hidden="true">→</span>
+          <span v-if="auth.isLoading" class="loading loading-spinner loading-xs" />
+          {{ t("auth.verify.submit") }}
+          <PhArrowRight v-if="!auth.isLoading" :size="16" weight="bold" aria-hidden="true" />
         </button>
       </form>
 
@@ -194,15 +196,12 @@ onBeforeUnmount(() => {
         </button>
         <br />
         {{ t("auth.verify.wrongEmail") }}
-        <a href="#" @click.prevent="startOver">{{
+        <button type="button" class="link link-primary no-underline hover:underline" @click="startOver">{{
           auth.isAuthenticated ? t("auth.verify.editEmail") : t("auth.verify.startOver")
-        }}</a>
+        }}</button>
       </p>
     </AuthPanel>
 
-    <footer class="login-footer">
-      <span>© 2026 Open Sesame</span>
-      <span><a href="#">Privacy</a><a href="#">Status</a></span>
-    </footer>
+    <AuthFooter />
   </main>
 </template>

@@ -297,23 +297,6 @@ body {
 }
 
 
-.remember-option {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  width: fit-content;
-  color: var(--color-base-content);
-  font-size: 12px;
-  line-height: 1;
-  opacity: 0.72;
-}
-
-.remember-option .checkbox {
-  flex: 0 0 16px;
-  width: 16px;
-  height: 16px;
-}
-
 .password-toggle {
   display: grid;
   flex: 0 0 auto;
@@ -452,13 +435,6 @@ body {
   text-decoration: underline;
 }
 
-.auth-divider {
-  margin: 28px 0 18px;
-  opacity: 0.72;
-  font-family: var(--font-mono);
-  font-size: 9px;
-}
-
 .help-text {
   margin: 32px 0 0;
   opacity: 0.72;
@@ -466,17 +442,11 @@ body {
   text-align: center;
 }
 
-footer {
+.login-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   opacity: 0.72;
-  font-family: var(--font-mono);
-  font-size: 9px;
-}
-
-footer span:last-child {
-  display: flex;
-  gap: 18px;
+  font-size: 12px;
 }
 
 .landing-shell {
@@ -1335,8 +1305,6 @@ footer span:last-child {
     width: 100%;
     padding: 10px 0 0;
   }
-  footer { flex-wrap: wrap; gap: 12px; line-height: 1.5; }
-  footer span:last-child { gap: 14px; }
   .dashboard-header { padding: 18px 20px; }
   .dashboard-content { width: min(100% - 40px, 760px); padding-top: 56px; }
   .dashboard-intro { margin-bottom: 32px; }

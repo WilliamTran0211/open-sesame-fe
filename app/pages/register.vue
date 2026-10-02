@@ -3,6 +3,7 @@ definePageMeta({
   middleware: ["guest"],
 });
 
+import { PhArrowRight } from "@phosphor-icons/vue";
 import { isValidEmail } from "~/utils/email";
 import { resolveLoginRedirect } from "~/utils/oauth";
 
@@ -66,7 +67,7 @@ async function register() {
           :label="t('auth.fullName')"
           autocomplete="name"
           :error="fullNameError"
-          error-message="Enter your full name."
+          :error-message="t('profile.account.nameRequired')"
         />
 
         <FormField
@@ -77,7 +78,7 @@ async function register() {
           autocomplete="email"
           :placeholder="t('auth.emailPlaceholder')"
           :error="emailError"
-          error-message="Enter a valid email address."
+          :error-message="t('auth.errors.invalidEmail')"
         />
 
         <PasswordStrengthInput
@@ -98,7 +99,7 @@ async function register() {
           autocomplete="new-password"
           :placeholder="t('auth.confirmPasswordPlaceholder')"
           :error="confirmPasswordError"
-          error-message="Passwords must match."
+          :error-message="t('auth.errors.passwordMismatch')"
           show-password-toggle
         />
 
@@ -113,10 +114,11 @@ async function register() {
         <button
           type="submit"
           class="btn btn-primary w-full"
-          :class="{ loading: auth.isLoading }"
           :disabled="auth.isLoading"
         >
-          {{ t("auth.createAccount") }} <span aria-hidden="true">→</span>
+          <span v-if="auth.isLoading" class="loading loading-spinner loading-xs" />
+          {{ t("auth.createAccount") }}
+          <PhArrowRight v-if="!auth.isLoading" :size="16" weight="bold" aria-hidden="true" />
         </button>
       </form>
 
@@ -129,9 +131,6 @@ async function register() {
       </p>
     </AuthPanel>
 
-    <footer class="login-footer">
-      <span>© 2026 Open Sesame</span>
-      <span><a href="#">Privacy</a><a href="#">Status</a></span>
-    </footer>
+    <AuthFooter />
   </main>
 </template>
