@@ -48,6 +48,7 @@ function updateCode(event: Event) {
       :id="`${id}-error`"
       class="field-error"
       :class="{ 'field-error-visible': error }"
+      :aria-hidden="!error"
     >
       {{ errorMessage }}
     </p>

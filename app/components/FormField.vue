@@ -81,6 +81,7 @@ const inputType = computed(() => {
       :id="errorId"
       class="field-error"
       :class="{ 'field-error-visible': error && errorMessage }"
+      :aria-hidden="!(error && errorMessage)"
     >
       {{ errorMessage }}
     </p>
