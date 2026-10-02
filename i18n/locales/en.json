@@ -352,7 +352,6 @@
     }
   },
   "profile": {
-    "eyebrow": "ACCOUNT",
     "title": "Your profile.",
     "description": "Update your details and keep your key safe.",
     "save": "Save changes",

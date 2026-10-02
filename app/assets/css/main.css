@@ -1141,12 +1141,6 @@ body {
   font-size: 12px;
 }
 
-.session-loading {
-  display: flex;
-  justify-content: center;
-  padding: 12px 0;
-}
-
 .session-list {
   display: grid;
   gap: 8px;
@@ -1211,6 +1205,12 @@ body {
 .dash-card .input-ghost:focus-within {
   border-color: var(--color-primary);
   outline: none;
+}
+
+/* Dashboard forms already space their fields; don't reserve a blank error line too. */
+.dash-card .field-error:not(.field-error-visible) {
+  height: 0;
+  min-height: 0;
 }
 
 /* No room beside the card: open the strength checklist below the input. */

@@ -324,7 +324,6 @@ watch(
 <template>
   <DashboardShell>
     <div class="dashboard-intro">
-      <p class="eyebrow">{{ t("profile.eyebrow") }}</p>
       <h1>{{ t("profile.title") }}</h1>
       <p>{{ t("profile.description") }}</p>
     </div>

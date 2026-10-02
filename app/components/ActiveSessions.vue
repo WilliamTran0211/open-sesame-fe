@@ -96,9 +96,14 @@ onMounted(load);
     </div>
     <p class="dash-field-hint">{{ t("profile.sessions.description") }}</p>
 
-    <div v-if="isLoading" class="session-loading" role="status">
-      <span class="loading loading-spinner loading-sm" />
-    </div>
+    <ul v-if="isLoading" class="session-list" :aria-label="t('common.loading')">
+      <li v-for="row in 2" :key="row" class="session-row" aria-hidden="true">
+        <div class="session-main">
+          <span class="skeleton h-4 w-40" />
+          <span class="skeleton h-3 w-24" />
+        </div>
+      </li>
+    </ul>
 
     <div v-else-if="loadError" role="alert" class="alert alert-error py-2 text-xs">
       <span>{{ loadError }}</span>
