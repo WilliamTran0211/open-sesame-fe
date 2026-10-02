@@ -1,4 +1,8 @@
 {
+  "theme": {
+    "useDark": "Switch to dark theme",
+    "useLight": "Switch to light theme"
+  },
   "brand": {
     "name": "Open Sesame",
     "kicker": "A trusted door to your work"
@@ -29,7 +33,6 @@
     "alreadyAccount": "Already have an account?",
     "signIn": "Sign in",
     "createAccount": "Create account",
-    "themeToggle": "Toggle dark mode",
     "mfa": {
       "eyebrow": "TWO-FACTOR AUTHENTICATION",
       "title": "Verify it's you.",

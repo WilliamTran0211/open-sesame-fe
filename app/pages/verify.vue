@@ -11,8 +11,6 @@ definePageMeta({
   ],
 });
 
-import moonIcon from "~/assets/icons/moon.svg";
-import sunIcon from "~/assets/icons/sun.svg";
 import { resolveLoginRedirect } from "~/utils/oauth";
 
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -27,7 +25,6 @@ const config = useRuntimeConfig();
 const returnTo = computed(
   () => resolveLoginRedirect(route.query, config.public.apiBaseUrl) || undefined,
 );
-const isDark = useState<boolean>("theme.isDark");
 const otp = ref("");
 const submitted = ref(false);
 const resent = ref(false);
@@ -138,19 +135,7 @@ onBeforeUnmount(() => {
 
 <template>
   <main class="login-page">
-    <label class="theme-toggle" title="Toggle dark mode">
-      <input
-        id="theme-toggle"
-        v-model="isDark"
-        type="checkbox"
-        class="toggle toggle-sm toggle-primary"
-        aria-label="Toggle dark mode"
-      />
-      <span class="theme-toggle-icons" aria-hidden="true">
-        <img class="theme-icon theme-icon-sun" :src="sunIcon" alt="" />
-        <img class="theme-icon theme-icon-moon" :src="moonIcon" alt="" />
-      </span>
-    </label>
+    <ThemeToggle class="auth-theme-toggle" />
 
     <AuthPanel
       heading-id="verify-title"

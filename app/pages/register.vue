@@ -3,14 +3,11 @@ definePageMeta({
   middleware: ["guest"],
 });
 
-import moonIcon from "~/assets/icons/moon.svg";
-import sunIcon from "~/assets/icons/sun.svg";
 import { isValidEmail } from "~/utils/email";
 import { resolveLoginRedirect } from "~/utils/oauth";
 
 const auth = useAuthStore();
 const { t } = useI18n();
-const isDark = useState<boolean>("theme.isDark");
 const route = useRoute();
 const config = useRuntimeConfig();
 // Kept through verify → sign-in so an OAuth consent can resume after sign-up.
@@ -53,19 +50,7 @@ async function register() {
 
 <template>
   <main class="login-page">
-    <label class="theme-toggle" title="Toggle dark mode">
-      <input
-        id="theme-toggle"
-        v-model="isDark"
-        type="checkbox"
-        class="toggle toggle-sm toggle-primary"
-        aria-label="Toggle dark mode"
-      />
-      <span class="theme-toggle-icons" aria-hidden="true">
-        <img class="theme-icon theme-icon-sun" :src="sunIcon" alt="" />
-        <img class="theme-icon theme-icon-moon" :src="moonIcon" alt="" />
-      </span>
-    </label>
+    <ThemeToggle class="auth-theme-toggle" />
 
     <AuthPanel
       heading-id="register-title"
