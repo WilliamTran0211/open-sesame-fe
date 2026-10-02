@@ -5,6 +5,11 @@ export type ApiError = {
 };
 
 export function getErrorMessage(error: unknown, fallback: string) {
+  // A 5xx body only says "something broke"; the caller's message says what failed.
+  if ((getErrorStatus(error) ?? 0) >= 500) {
+    return fallback;
+  }
+
   const data = (error as { data?: ApiError })?.data;
   const detail = Array.isArray(data?.detail)
     ? data.detail
