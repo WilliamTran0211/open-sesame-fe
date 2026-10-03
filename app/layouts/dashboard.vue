@@ -20,9 +20,11 @@ function isActive(link: { to: string; exact: boolean }) {
     : route.path.startsWith(link.to);
 }
 
+// A full reload, not a route change: nothing from this account stays in memory
+// (clients, scopes, cached profile) for whoever uses the browser next.
 async function signOut() {
   await auth.signOut();
-  await navigateTo("/login");
+  reloadNuxtApp({ path: "/login", force: true });
 }
 </script>
 

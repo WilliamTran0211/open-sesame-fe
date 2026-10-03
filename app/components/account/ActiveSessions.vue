@@ -78,7 +78,8 @@ async function revokeAll() {
 
   if (!revokeError.value) {
     // This session was revoked too.
-    await navigateTo("/login");
+    // This session ended too; reload so nothing from it stays in memory.
+    reloadNuxtApp({ path: "/login", force: true });
   }
 }
 

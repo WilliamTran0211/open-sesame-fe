@@ -56,10 +56,9 @@ async function handleExpiredSession() {
   const route = useRouter().currentRoute.value;
 
   if (route.path !== "/login") {
-    await navigateTo({
-      path: "/login",
-      query: { redirect: route.fullPath, expired: "1" },
-    });
+    // Reload rather than navigate so the old session's data leaves memory too.
+    const query = new URLSearchParams({ redirect: route.fullPath, expired: "1" });
+    reloadNuxtApp({ path: `/login?${query}`, force: true });
   }
 }
 
