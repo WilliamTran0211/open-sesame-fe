@@ -338,6 +338,24 @@ body {
   text-align: center;
 }
 
+.error-status {
+  margin: -12px 0 20px;
+  opacity: 0.72;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.error-detail {
+  overflow-x: auto;
+  margin: 0 0 20px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--color-base-200);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
 .success-card {
   text-align: center;
 }

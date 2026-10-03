@@ -6,6 +6,19 @@
   "common": {
     "loading": "Loading"
   },
+  "errorPage": {
+    "status": "Error {status}",
+    "toHome": "Go to the home page",
+    "toDashboard": "Go to your dashboard",
+    "notFound": {
+      "title": "Page not found.",
+      "description": "This page doesn't exist or has moved. Check the address, or head back and try again."
+    },
+    "generic": {
+      "title": "Something went wrong.",
+      "description": "An unexpected error stopped this page from loading. Try again in a moment."
+    }
+  },
   "brand": {
     "name": "Open Sesame",
     "kicker": "A trusted door to your work",
