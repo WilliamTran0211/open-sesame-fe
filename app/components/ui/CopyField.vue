@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Check, Copy } from "lucide";
+
 const props = defineProps<{
   label: string;
   value: string;
@@ -29,6 +31,7 @@ onBeforeUnmount(() => window.clearTimeout(resetTimer));
     <div class="copy-field-row">
       <code class="copy-field-value">{{ value }}</code>
       <button type="button" class="btn btn-ghost btn-xs" @click="copy">
+        <AppIcon :icon="copied ? Check : Copy" :size="13" />
         {{ copied ? t("clients.copied") : t("clients.copy") }}
       </button>
     </div>

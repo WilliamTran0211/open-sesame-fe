@@ -4,12 +4,7 @@ definePageMeta({
   middleware: ["auth"],
 });
 
-import {
-  PhAppWindow,
-  PhCaretRight,
-  PhListChecks,
-  PhUserCircle,
-} from "@phosphor-icons/vue";
+import { AppWindow, ChevronRight, CircleUserRound, ListChecks } from "lucide";
 
 const auth = useAuthStore();
 const clientsStore = useClientsStore();
@@ -22,7 +17,7 @@ const activeCount = computed(
 const sections = computed(() => [
   {
     to: "/dashboard/clients",
-    icon: PhAppWindow,
+    icon: AppWindow,
     title: t("dashboard.clientsCard.title"),
     description: t("dashboard.clientsCard.description"),
     count: true,
@@ -31,7 +26,7 @@ const sections = computed(() => [
     ? [
         {
           to: "/dashboard/scopes",
-          icon: PhListChecks,
+          icon: ListChecks,
           title: t("dashboard.scopesCard.title"),
           description: t("dashboard.scopesCard.description"),
           count: false,
@@ -40,7 +35,7 @@ const sections = computed(() => [
     : []),
   {
     to: "/dashboard/profile",
-    icon: PhUserCircle,
+    icon: CircleUserRound,
     title: t("dashboard.profileCard.title"),
     description: t("dashboard.profileCard.description"),
     count: false,
@@ -64,7 +59,7 @@ useHead({ title: () => t("titles.overview") });
     <li v-for="section in sections" :key="section.to">
       <NuxtLink :to="section.to" class="client-row">
         <span class="client-monogram" aria-hidden="true">
-          <component :is="section.icon" :size="20" />
+          <AppIcon :icon="section.icon" :size="20" />
         </span>
         <span class="client-row-main">
           <strong>{{ section.title }}</strong>
@@ -80,7 +75,7 @@ useHead({ title: () => t("titles.overview") });
             {{ t("dashboard.clientsCard.count", { count: activeCount }) }}
           </span>
         </span>
-        <PhCaretRight class="client-row-caret" :size="16" aria-hidden="true" />
+        <AppIcon :icon="ChevronRight" class="client-row-caret" :size="16" />
       </NuxtLink>
     </li>
   </ul>

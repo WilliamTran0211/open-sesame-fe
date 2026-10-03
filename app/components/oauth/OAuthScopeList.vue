@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { PhPuzzlePiece, PhUserCircle, PhWarningCircle } from "@phosphor-icons/vue";
+import { CircleAlert, CircleUserRound, Puzzle } from "lucide";
 import { SCOPE_CATALOG } from "~/utils/oauth";
 
 // The icon carries the risk level, so it isn't conveyed by color alone.
 const LEVEL_ICONS = {
-  basic: PhUserCircle,
-  sensitive: PhWarningCircle,
-  custom: PhPuzzlePiece,
+  basic: CircleUserRound,
+  sensitive: CircleAlert,
+  custom: Puzzle,
 };
 
 const props = withDefaults(
@@ -69,11 +69,10 @@ const items = computed(() => {
       class="oauth-scope-item"
       :class="`oauth-scope-${item.level}`"
     >
-      <component
-        :is="LEVEL_ICONS[item.level]"
+      <AppIcon
+        :icon="LEVEL_ICONS[item.level]"
         class="oauth-scope-icon"
         :size="18"
-        aria-hidden="true"
       />
       <div>
         <p class="oauth-scope-title">

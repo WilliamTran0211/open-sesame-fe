@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import QRCode from "qrcode";
-import { PhCopy, PhDownloadSimple } from "@phosphor-icons/vue";
+import { Check, Copy, Download } from "lucide";
 
 definePageMeta({
   layout: "dashboard",
@@ -586,11 +586,11 @@ useHead({ title: () => t("titles.profile") });
       </ul>
       <div class="flex flex-wrap gap-2">
         <button type="button" class="btn btn-ghost" @click="copyRecoveryCodes">
-          <PhCopy :size="16" aria-hidden="true" />
+          <AppIcon :icon="recoveryCopied ? Check : Copy" :size="16" />
           {{ recoveryCopied ? t("clients.copied") : t("profile.mfa.copyRecovery") }}
         </button>
         <button type="button" class="btn btn-ghost" @click="downloadRecoveryCodes">
-          <PhDownloadSimple :size="16" aria-hidden="true" />
+          <AppIcon :icon="Download" :size="16" />
           {{ t("profile.mfa.downloadRecovery") }}
         </button>
         <button

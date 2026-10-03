@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PhWarningCircle } from "@phosphor-icons/vue";
+import { CircleAlert } from "lucide";
 
 const props = withDefaults(
   defineProps<{
@@ -47,7 +47,7 @@ function updateCode(event: Event) {
       @input="updateCode"
     />
     <p v-if="error && errorMessage" :id="`${id}-error`" class="field-error">
-      <PhWarningCircle :size="14" weight="bold" aria-hidden="true" />
+      <AppIcon :icon="CircleAlert" :size="14" strong />
       {{ errorMessage }}
     </p>
   </div>

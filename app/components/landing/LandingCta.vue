@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PhArrowRight } from "@phosphor-icons/vue";
+import { ArrowRight } from "lucide";
 
 const { t } = useI18n();
 </script>
@@ -11,7 +11,7 @@ const { t } = useI18n();
       <p class="landing-lede">{{ t("landing.cta.description") }}</p>
       <NuxtLink to="/register" class="btn btn-primary">
         {{ t("auth.createAccount") }}
-        <PhArrowRight :size="16" weight="bold" aria-hidden="true" />
+        <AppIcon :icon="ArrowRight" :size="16" strong />
       </NuxtLink>
     </div>
   </section>

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { PhArrowLeft } from "@phosphor-icons/vue";
+import { ArrowLeft } from "lucide";
 
 defineProps<{ to: string }>();
 </script>
 
 <template>
   <NuxtLink :to="to" class="dash-back">
-    <PhArrowLeft :size="14" aria-hidden="true" />
+    <AppIcon :icon="ArrowLeft" :size="14" />
     <slot />
   </NuxtLink>
 </template>

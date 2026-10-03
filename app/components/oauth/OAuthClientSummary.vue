@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PhLockKey } from "@phosphor-icons/vue";
+import { LockKeyhole } from "lucide";
 import { getUrlHost, type OAuthClientInfo } from "~/utils/oauth";
 
 const props = defineProps<{
@@ -24,7 +24,7 @@ const redirectHost = computed(() => getUrlHost(props.redirectUri));
       </span>
       <span class="oauth-link-line" />
       <span class="oauth-app-mark oauth-app-mark-self">
-        <PhLockKey :size="18" weight="bold" />
+        <AppIcon :icon="LockKeyhole" :size="18" strong />
       </span>
     </div>
 

@@ -4,7 +4,7 @@ definePageMeta({
   middleware: ["auth"],
 });
 
-import { PhArrowClockwise, PhCaretRight, PhPlus } from "@phosphor-icons/vue";
+import { ChevronRight, Plus, RotateCw } from "lucide";
 
 type StatusFilter = "all" | "active" | "inactive";
 
@@ -51,11 +51,11 @@ useHead({ title: () => t("titles.clients") });
         @click="clientsStore.fetchClients()"
       >
         <span v-if="clientsStore.isLoading" class="loading loading-spinner loading-xs" />
-        <PhArrowClockwise v-else :size="16" weight="bold" aria-hidden="true" />
+        <AppIcon :icon="RotateCw" v-else :size="16" strong />
         {{ t("clients.reload") }}
       </button>
       <NuxtLink to="/dashboard/clients/new" class="btn btn-primary">
-        <PhPlus :size="16" weight="bold" aria-hidden="true" />
+        <AppIcon :icon="Plus" :size="16" strong />
         {{ t("clients.new") }}
       </NuxtLink>
     </template>
@@ -131,7 +131,7 @@ useHead({ title: () => t("titles.clients") });
           </span>
           <small>{{ new Date(client.created_at).toLocaleDateString() }}</small>
         </span>
-        <PhCaretRight class="client-row-caret" :size="16" aria-hidden="true" />
+        <AppIcon :icon="ChevronRight" class="client-row-caret" :size="16" />
       </NuxtLink>
     </li>
   </ul>

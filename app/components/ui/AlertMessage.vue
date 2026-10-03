@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import {
-  PhCheckCircle,
-  PhInfo,
-  PhWarning,
-  PhWarningCircle,
-} from "@phosphor-icons/vue";
+import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide";
 
 const props = withDefaults(
   defineProps<{
@@ -19,10 +14,10 @@ const props = withDefaults(
 );
 
 const ICONS = {
-  error: PhWarningCircle,
-  warning: PhWarning,
-  success: PhCheckCircle,
-  info: PhInfo,
+  error: CircleAlert,
+  warning: TriangleAlert,
+  success: CircleCheck,
+  info: Info,
 };
 
 // Problems interrupt screen readers; confirmations wait their turn.
@@ -37,12 +32,11 @@ const role = computed(() =>
     class="alert-message"
     :class="[`is-${tone}`, { 'is-compact': compact }]"
   >
-    <component
-      :is="ICONS[tone]"
+    <AppIcon
+      :icon="ICONS[tone]"
       class="alert-message-icon"
       :size="compact ? 15 : 18"
-      weight="bold"
-      aria-hidden="true"
+      strong
     />
     <div class="alert-message-body">
       <slot />

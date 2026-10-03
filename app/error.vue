@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { NuxtError } from "#app";
-import { PhArrowRight } from "@phosphor-icons/vue";
+import { ArrowRight } from "lucide";
 
 const props = defineProps<{ error: NuxtError }>();
 
@@ -41,7 +41,7 @@ function goHome() {
 
       <button type="button" class="btn btn-primary w-full" @click="goHome">
         {{ auth.isAuthenticated ? t("errorPage.toDashboard") : t("errorPage.toHome") }}
-        <PhArrowRight :size="16" weight="bold" aria-hidden="true" />
+        <AppIcon :icon="ArrowRight" :size="16" strong />
       </button>
     </AuthPanel>
   </NuxtLayout>

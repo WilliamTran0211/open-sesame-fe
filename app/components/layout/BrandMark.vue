@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { PhLockKey } from "@phosphor-icons/vue";
+import { LockKeyhole } from "lucide";
 
 withDefaults(defineProps<{ size?: number }>(), { size: 16 });
 </script>
 
 <template>
   <span class="brand-mark" aria-hidden="true">
-    <PhLockKey :size="size" weight="bold" />
+    <AppIcon :icon="LockKeyhole" :size="size" strong />
   </span>
 </template>

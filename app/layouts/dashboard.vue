@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PhSignOut } from "@phosphor-icons/vue";
+import { LogOut } from "lucide";
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -51,7 +51,7 @@ async function signOut() {
       <div class="dashboard-header-actions">
         <ThemeToggle />
         <button class="btn btn-ghost btn-sm" type="button" @click="signOut">
-          <PhSignOut :size="16" aria-hidden="true" />
+          <AppIcon :icon="LogOut" :size="16" />
           {{ t("dashboard.signOut") }}
         </button>
       </div>

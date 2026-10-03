@@ -4,7 +4,7 @@ definePageMeta({
   middleware: ["auth"],
 });
 
-import { PhArrowRight } from "@phosphor-icons/vue";
+import { ArrowRight } from "lucide";
 import {
   buildAuthorizeUrl,
   buildDeniedUrl,
@@ -171,7 +171,7 @@ useHead({ title: () => appName.value ? t("titles.consent", { app: appName.value 
           @click="allow"
         >
           {{ t("oauth.allow") }}
-          <PhArrowRight :size="16" weight="bold" aria-hidden="true" />
+          <AppIcon :icon="ArrowRight" :size="16" strong />
         </button>
       </div>
     </div>

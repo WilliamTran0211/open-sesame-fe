@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { PhArrowsLeftRight, PhCheckCircle, PhSignIn } from "@phosphor-icons/vue";
+import { ArrowLeftRight, CircleCheck, LogIn } from "lucide";
 
 const { t } = useI18n();
 
 const steps = [
-  { key: "redirect", icon: PhSignIn },
-  { key: "approve", icon: PhCheckCircle },
-  { key: "exchange", icon: PhArrowsLeftRight },
+  { key: "redirect", icon: LogIn },
+  { key: "approve", icon: CircleCheck },
+  { key: "exchange", icon: ArrowLeftRight },
 ];
 
 // Mirrors the API's AuthorizeQueryParams and AuthorizationCodeGrantRequest.
@@ -38,7 +38,7 @@ const tokenRequest = `POST /api/v1/oauth/token
 
       <ol class="landing-steps">
         <li v-for="step in steps" :key="step.key">
-          <component :is="step.icon" class="landing-step-icon" :size="22" aria-hidden="true" />
+          <AppIcon :icon="step.icon" class="landing-step-icon" :size="22" />
           <div>
             <h3>{{ t(`landing.flow.steps.${step.key}.title`) }}</h3>
             <p>{{ t(`landing.flow.steps.${step.key}.description`) }}</p>

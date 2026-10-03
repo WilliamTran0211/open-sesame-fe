@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PhCheck, PhEye, PhEyeSlash, PhX } from "@phosphor-icons/vue";
+import { Check, Eye, EyeOff, X } from "lucide";
 import { getPasswordChecks } from "~/utils/password";
 
 const props = withDefaults(
@@ -93,8 +93,7 @@ function hideStrength() {
           @mousedown.prevent
           @click="isPasswordVisible = !isPasswordVisible"
         >
-          <PhEyeSlash v-if="isPasswordVisible" :size="17" aria-hidden="true" />
-          <PhEye v-else :size="17" aria-hidden="true" />
+          <AppIcon :icon="isPasswordVisible ? EyeOff : Eye" :size="17" />
         </button>
       </label>
 
@@ -123,8 +122,7 @@ function hideStrength() {
               :class="checks[index] ? 'is-met' : 'is-unmet'"
               aria-hidden="true"
             >
-              <PhCheck v-if="checks[index]" :size="14" weight="bold" />
-              <PhX v-else :size="14" />
+              <AppIcon :icon="checks[index] ? Check : X" :size="14" strong />
             </span>
             <span>{{ requirement }}</span>
           </li>

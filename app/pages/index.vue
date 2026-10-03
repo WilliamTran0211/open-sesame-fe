@@ -3,7 +3,7 @@ definePageMeta({
   middleware: ["guest"],
 });
 
-import { PhArrowRight } from "@phosphor-icons/vue";
+import { ArrowRight } from "lucide";
 import type { OAuthClientInfo } from "~/utils/oauth";
 
 const { t } = useI18n();
@@ -55,7 +55,7 @@ const exampleClient: OAuthClientInfo = {
         <div class="landing-actions">
           <NuxtLink to="/register" class="btn btn-primary">
             {{ t("auth.createAccount") }}
-            <PhArrowRight :size="16" weight="bold" aria-hidden="true" />
+            <AppIcon :icon="ArrowRight" :size="16" strong />
           </NuxtLink>
           <NuxtLink to="/login" class="btn btn-ghost">
             {{ t("auth.signIn") }}

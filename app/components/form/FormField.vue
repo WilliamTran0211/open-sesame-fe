@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PhEye, PhEyeSlash, PhWarningCircle } from "@phosphor-icons/vue";
+import { CircleAlert, Eye, EyeOff } from "lucide";
 
 type InputType = "email" | "password" | "text";
 
@@ -73,12 +73,11 @@ const inputType = computed(() => {
         "
         @click="isPasswordVisible = !isPasswordVisible"
       >
-        <PhEyeSlash v-if="isPasswordVisible" :size="17" aria-hidden="true" />
-        <PhEye v-else :size="17" aria-hidden="true" />
+        <AppIcon :icon="isPasswordVisible ? EyeOff : Eye" :size="17" />
       </button>
     </label>
     <p v-if="error && errorMessage" :id="errorId" class="field-error">
-      <PhWarningCircle :size="14" weight="bold" aria-hidden="true" />
+      <AppIcon :icon="CircleAlert" :size="14" strong />
       {{ errorMessage }}
     </p>
   </div>
