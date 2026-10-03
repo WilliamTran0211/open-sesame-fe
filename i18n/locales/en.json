@@ -152,13 +152,22 @@
     "createAccount": "Create account",
     "mfa": {
       "title": "Verify it's you.",
-      "description": "Enter the code from your authenticator app or the one we just emailed you. You can also use a recovery code.",
-      "code": "Verification or recovery code",
-      "codePlaceholder": "Enter your code",
-      "submit": "Verify and sign in",
-      "back": "Back to sign in",
-      "emailHint": "Email codes expire after 5 minutes. Didn't get one?",
-      "signInAgain": "Sign in again to get a new code"
+      "choose": "How do you want to confirm this sign-in?",
+      "methods": {
+        "totp": { "label": "Authenticator app", "hint": "6-digit code from your app" },
+        "email": { "label": "Email code", "hint": "6-digit code sent to your inbox" },
+        "recovery": { "label": "Recovery code", "hint": "One of your saved backup codes" }
+      },
+      "steps": {
+        "totp": { "title": "Enter your app code", "description": "Open your authenticator app." },
+        "email": { "title": "Check your email", "description": "The code expires in 5 minutes." },
+        "recovery": { "title": "Use a recovery code", "description": "Each code works once." }
+      },
+      "code": "6-digit code",
+      "submit": "Verify",
+      "otherMethod": "Use another method",
+      "noEmail": "No email?",
+      "signInAgain": "Sign in again"
     },
     "showPassword": "Show password",
     "hidePassword": "Hide password",
@@ -207,7 +216,8 @@
       "resend": "Unable to resend the code. Please try again.",
       "resendLimited": "Too many codes requested. Try again in an hour.",
       "profile": "Unable to load your profile.",
-      "mfaCodeRequired": "Enter a verification or recovery code.",
+      "mfaCodeRequired": "Enter the 6-digit code.",
+      "recoveryCodeInvalid": "Recovery codes are 10 characters.",
       "mfaVerify": "Unable to verify your code. Please try again."
     }
   },

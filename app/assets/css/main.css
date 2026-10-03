@@ -516,6 +516,79 @@ body {
   text-align: center;
 }
 
+/* Two-factor: pick a method, then enter its code. */
+.mfa-methods {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mfa-method {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: var(--radius-box);
+  background: var(--color-base-100);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.mfa-method:hover {
+  border-color: color-mix(in srgb, var(--color-primary-ink) 45%, transparent);
+  transform: translateY(-1px);
+}
+
+.mfa-method:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary-ink) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.mfa-method-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-ink);
+}
+
+.mfa-method-text {
+  display: grid;
+  gap: 2px;
+}
+
+.mfa-method-text strong { font-size: 14px; }
+.mfa-method-text small { opacity: 0.72; font-size: 12px; }
+.mfa-method-caret { opacity: 0.6; }
+
+.mfa-switch {
+  justify-self: center;
+  padding: 4px 8px;
+  border: 0;
+  background: none;
+  color: var(--color-primary-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mfa-switch:hover { text-decoration: underline; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mfa-method:hover { transform: none; }
+}
+
 .login-footer {
   display: flex;
   justify-content: center;

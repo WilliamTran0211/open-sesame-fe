@@ -25,6 +25,11 @@ function getChallengeId(value: unknown) {
   return typeof challengeId === "string" && challengeId ? challengeId : null;
 }
 
+function getChallengeMethod(value: unknown): MfaMethod | null {
+  const method = (value as LoginResponse | undefined)?.mfa_method;
+  return method === "totp" || method === "email" ? method : null;
+}
+
 function getDisplayName(user: Partial<AuthUser> | null | undefined) {
   if (!user) {
     return "User";
@@ -50,6 +55,8 @@ export const useAuthStore = defineStore("auth", () => {
     "auth.mfaChallengeId",
     () => null,
   );
+  // The account's two-factor method, when the API says which one it is.
+  const mfaMethod = useState<MfaMethod | null>("auth.mfaMethod", () => null);
   const isAuthenticated = computed(() => !!user.value);
   const pendingEmail = useState<string>("auth.pendingEmail", () => {
     if (import.meta.client) {
@@ -117,6 +124,7 @@ export const useAuthStore = defineStore("auth", () => {
     isLoading.value = true;
     error.value = "";
     mfaChallengeId.value = null;
+    mfaMethod.value = null;
 
     if (!email || !password) {
       error.value = t("auth.errors.signInRequired");
@@ -136,6 +144,7 @@ export const useAuthStore = defineStore("auth", () => {
       const challengeId = getChallengeId(loginResponse);
       if (challengeId) {
         mfaChallengeId.value = challengeId;
+        mfaMethod.value = getChallengeMethod(loginResponse);
         isLoading.value = false;
         return "mfa_required";
       }
@@ -153,6 +162,9 @@ export const useAuthStore = defineStore("auth", () => {
       );
       if (challengeId) {
         mfaChallengeId.value = challengeId;
+        mfaMethod.value = getChallengeMethod(
+          (requestError as { data?: LoginResponse })?.data,
+        );
         return "mfa_required";
       }
 
@@ -433,6 +445,7 @@ export const useAuthStore = defineStore("auth", () => {
     pendingEmail,
     signIn,
     mfaChallengeId,
+    mfaMethod,
     verifyMfaLogin,
     setupMfa,
     confirmMfa,

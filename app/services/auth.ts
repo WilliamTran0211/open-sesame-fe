@@ -1,9 +1,11 @@
 // /auth endpoints: sign-in (with the optional two-factor step), sign-out and sessions.
 import { apiFetch } from "~/utils/api";
+import type { MfaMethod } from "./mfa";
 import type { AuthUser } from "./users";
 
 // Sign-in answers with the user, or with a challenge when two-factor is on.
-export type LoginResponse = AuthUser & { challenge_id?: string };
+// mfa_method is not sent by the API yet; when it is, the 2FA page offers only it.
+export type LoginResponse = AuthUser & { challenge_id?: string; mfa_method?: MfaMethod };
 
 // Mirrors the API's SessionResponseSchema (GET /auth/sessions).
 export type UserSession = {
