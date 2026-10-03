@@ -48,6 +48,6 @@ watch(isDark, applyTheme);
 
 <template>
   <!-- Shows only while a route is loading, unlike a permanent spinner. -->
-  <NuxtLoadingIndicator color="var(--color-primary)" :height="2" />
+  <NuxtLoadingIndicator color="var(--color-primary-ink)" :height="2" />
   <NuxtPage />
 </template>
