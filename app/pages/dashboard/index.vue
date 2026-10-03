@@ -1,5 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
+  layout: "dashboard",
   middleware: ["auth"],
 });
 
@@ -52,35 +53,33 @@ onMounted(() => {
 </script>
 
 <template>
-  <DashboardShell>
-    <div class="dashboard-intro">
-      <h1>{{ t("dashboard.greeting", { name: userName }) }}</h1>
-      <p v-if="auth.user?.email">{{ auth.user.email }}</p>
-    </div>
+  <PageHeader
+    :title="t('dashboard.greeting', { name: userName })"
+    :description="auth.user?.email"
+  />
 
-    <ul class="client-list">
-      <li v-for="section in sections" :key="section.to">
-        <NuxtLink :to="section.to" class="client-row">
-          <span class="client-monogram" aria-hidden="true">
-            <component :is="section.icon" :size="20" />
+  <ul class="client-list">
+    <li v-for="section in sections" :key="section.to">
+      <NuxtLink :to="section.to" class="client-row">
+        <span class="client-monogram" aria-hidden="true">
+          <component :is="section.icon" :size="20" />
+        </span>
+        <span class="client-row-main">
+          <strong>{{ section.title }}</strong>
+          <small>{{ section.description }}</small>
+        </span>
+        <span v-if="section.count" class="client-row-meta">
+          <span
+            v-if="clientsStore.isLoading && !clientsStore.clients.length"
+            class="skeleton h-5 w-16"
+            :aria-label="t('common.loading')"
+          />
+          <span v-else class="badge badge-sm badge-ghost">
+            {{ t("dashboard.clientsCard.count", { count: activeCount }) }}
           </span>
-          <span class="client-row-main">
-            <strong>{{ section.title }}</strong>
-            <small>{{ section.description }}</small>
-          </span>
-          <span v-if="section.count" class="client-row-meta">
-            <span
-              v-if="clientsStore.isLoading && !clientsStore.clients.length"
-              class="skeleton h-5 w-16"
-              :aria-label="t('common.loading')"
-            />
-            <span v-else class="badge badge-sm badge-ghost">
-              {{ t("dashboard.clientsCard.count", { count: activeCount }) }}
-            </span>
-          </span>
-          <PhCaretRight class="client-row-caret" :size="16" aria-hidden="true" />
-        </NuxtLink>
-      </li>
-    </ul>
-  </DashboardShell>
+        </span>
+        <PhCaretRight class="client-row-caret" :size="16" aria-hidden="true" />
+      </NuxtLink>
+    </li>
+  </ul>
 </template>

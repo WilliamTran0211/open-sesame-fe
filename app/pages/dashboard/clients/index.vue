@@ -1,5 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
+  layout: "dashboard",
   middleware: ["auth"],
 });
 
@@ -39,115 +40,97 @@ onMounted(() => {
 </script>
 
 <template>
-  <DashboardShell>
-    <div class="dash-page-header">
-      <div class="dashboard-intro">
-        <h1>{{ t("clients.title") }}</h1>
-        <p>{{ t("clients.description") }}</p>
-      </div>
-      <div class="dash-page-actions">
-        <button
-          type="button"
-          class="btn btn-ghost"
-          :disabled="clientsStore.isLoading"
-          @click="clientsStore.fetchClients()"
-        >
-          <span v-if="clientsStore.isLoading" class="loading loading-spinner loading-xs" />
-          <PhArrowClockwise v-else :size="16" weight="bold" aria-hidden="true" />
-          {{ t("clients.reload") }}
-        </button>
-        <NuxtLink to="/dashboard/clients/new" class="btn btn-primary">
-          <PhPlus :size="16" weight="bold" aria-hidden="true" />
-          {{ t("clients.new") }}
-        </NuxtLink>
-      </div>
-    </div>
-
-    <div class="dash-toolbar">
-      <div role="tablist" class="tabs tabs-box tabs-sm">
-        <button
-          v-for="option in (['all', 'active', 'inactive'] as const)"
-          :key="option"
-          type="button"
-          role="tab"
-          class="tab"
-          :class="{ 'tab-active': filter === option }"
-          :aria-selected="filter === option"
-          @click="filter = option"
-        >
-          {{ t(`clients.filters.${option}`) }}
-          <span class="dash-count">{{ counts[option] }}</span>
-        </button>
-      </div>
-      <input
-        v-model="search"
-        type="search"
-        class="input input-sm dash-search"
-        :placeholder="t('clients.search')"
-        :aria-label="t('clients.search')"
-      />
-    </div>
-
-    <!-- A failed load still shows the (empty) list; Reload above tries again. -->
-    <AlertMessage v-if="clientsStore.error" class="mb-4">
-      {{ clientsStore.error }}
-    </AlertMessage>
-
-    <ul
-      v-if="clientsStore.isLoading && !clientsStore.clients.length"
-      class="client-list"
-      :aria-label="t('common.loading')"
-    >
-      <li v-for="row in 3" :key="row" class="client-row" aria-hidden="true">
-        <span class="skeleton h-[38px] w-[38px]" />
-        <span class="client-row-main">
-          <span class="skeleton h-4 w-40" />
-          <span class="skeleton h-3 w-56" />
-        </span>
-      </li>
-    </ul>
-
-    <div v-else-if="!clientsStore.clients.length" class="dash-empty">
-      <p class="dash-empty-title">{{ t("clients.empty.title") }}</p>
-      <p>{{ t("clients.empty.description") }}</p>
-      <NuxtLink to="/dashboard/clients/new" class="btn btn-primary btn-sm">
+  <PageHeader :title="t('clients.title')" :description="t('clients.description')">
+    <template #actions>
+      <button
+        type="button"
+        class="btn btn-ghost"
+        :disabled="clientsStore.isLoading"
+        @click="clientsStore.fetchClients()"
+      >
+        <span v-if="clientsStore.isLoading" class="loading loading-spinner loading-xs" />
+        <PhArrowClockwise v-else :size="16" weight="bold" aria-hidden="true" />
+        {{ t("clients.reload") }}
+      </button>
+      <NuxtLink to="/dashboard/clients/new" class="btn btn-primary">
+        <PhPlus :size="16" weight="bold" aria-hidden="true" />
         {{ t("clients.new") }}
       </NuxtLink>
-    </div>
+    </template>
+  </PageHeader>
 
-    <div v-else-if="!filteredClients.length" class="dash-empty">
-      <p>{{ t("clients.noMatch") }}</p>
+  <div class="dash-toolbar">
+    <div role="tablist" class="tabs tabs-box tabs-sm">
+      <button
+        v-for="option in (['all', 'active', 'inactive'] as const)"
+        :key="option"
+        type="button"
+        role="tab"
+        class="tab"
+        :class="{ 'tab-active': filter === option }"
+        :aria-selected="filter === option"
+        @click="filter = option"
+      >
+        {{ t(`clients.filters.${option}`) }}
+        <span class="dash-count">{{ counts[option] }}</span>
+      </button>
     </div>
+    <input
+      v-model="search"
+      type="search"
+      class="input input-sm dash-search"
+      :placeholder="t('clients.search')"
+      :aria-label="t('clients.search')"
+    />
+  </div>
 
-    <ul v-else class="client-list">
-      <li v-for="client in filteredClients" :key="client.client_id">
-        <NuxtLink
-          :to="`/dashboard/clients/${encodeURIComponent(client.client_id)}`"
-          class="client-row"
-          :class="{ 'is-inactive': !client.is_active }"
-        >
-          <span class="client-monogram" aria-hidden="true">
-            {{ client.name.charAt(0).toUpperCase() }}
+  <!-- A failed load still shows the (empty) list; Reload above tries again. -->
+  <AlertMessage v-if="clientsStore.error" class="mb-4">
+    {{ clientsStore.error }}
+  </AlertMessage>
+
+  <SkeletonRows v-if="clientsStore.isLoading && !clientsStore.clients.length" avatar />
+
+  <EmptyState
+    v-else-if="!clientsStore.clients.length"
+    :title="t('clients.empty.title')"
+    :description="t('clients.empty.description')"
+  >
+    <NuxtLink to="/dashboard/clients/new" class="btn btn-primary btn-sm">
+      {{ t("clients.new") }}
+    </NuxtLink>
+  </EmptyState>
+
+  <EmptyState v-else-if="!filteredClients.length" :description="t('clients.noMatch')" />
+
+  <ul v-else class="client-list">
+    <li v-for="client in filteredClients" :key="client.client_id">
+      <NuxtLink
+        :to="`/dashboard/clients/${encodeURIComponent(client.client_id)}`"
+        class="client-row"
+        :class="{ 'is-inactive': !client.is_active }"
+      >
+        <span class="client-monogram" aria-hidden="true">
+          {{ client.name.charAt(0).toUpperCase() }}
+        </span>
+        <span class="client-row-main">
+          <strong>{{ client.name }}</strong>
+          <code>{{ client.client_id }}</code>
+        </span>
+        <span class="client-row-meta">
+          <span class="badge badge-ghost badge-sm">
+            {{ t(`clients.types.${client.client_type}.title`) }}
           </span>
-          <span class="client-row-main">
-            <strong>{{ client.name }}</strong>
-            <code>{{ client.client_id }}</code>
+          <span
+            class="badge badge-sm"
+            :class="client.is_active ? 'badge-success' : 'badge-neutral'"
+          >
+            {{ client.is_active ? t("clients.status.active") : t("clients.status.inactive") }}
           </span>
-          <span class="client-row-meta">
-            <span class="badge badge-ghost badge-sm">
-              {{ t(`clients.types.${client.client_type}.title`) }}
-            </span>
-            <span
-              class="badge badge-sm"
-              :class="client.is_active ? 'badge-success' : 'badge-neutral'"
-            >
-              {{ client.is_active ? t("clients.status.active") : t("clients.status.inactive") }}
-            </span>
-            <small>{{ new Date(client.created_at).toLocaleDateString() }}</small>
-          </span>
-          <PhCaretRight class="client-row-caret" :size="16" aria-hidden="true" />
-        </NuxtLink>
-      </li>
-    </ul>
-  </DashboardShell>
+          <small>{{ new Date(client.created_at).toLocaleDateString() }}</small>
+        </span>
+        <PhCaretRight class="client-row-caret" :size="16" aria-hidden="true" />
+      </NuxtLink>
+    </li>
+  </ul>
 </template>

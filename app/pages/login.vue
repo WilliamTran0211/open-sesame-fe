@@ -1,9 +1,9 @@
 <script setup lang="ts">
 definePageMeta({
+  layout: "auth",
   middleware: ["guest"],
 });
 
-import { PhArrowRight } from "@phosphor-icons/vue";
 import { isValidEmail } from "~/utils/email";
 import { resolveLoginRedirect } from "~/utils/oauth";
 
@@ -58,89 +58,77 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="login-page">
-    <ThemeToggle class="auth-theme-toggle" />
+  <AuthPanel
+    heading-id="login-title"
+    :title="t('auth.login.title')"
+    :description="t('auth.login.description')"
+  >
+    <form class="auth-form" @submit.prevent="signIn">
+      <AlertMessage v-if="auth.error">
+        {{ auth.error }}
+      </AlertMessage>
 
-    <AuthPanel
-      heading-id="login-title"
-      :title="t('auth.login.title')"
-      :description="t('auth.login.description')"
-    >
-      <form class="auth-form" @submit.prevent="signIn">
-        <AlertMessage v-if="auth.error">
-          {{ auth.error }}
-        </AlertMessage>
+      <AlertMessage v-else-if="justVerified" tone="success">
+        {{ t("auth.verify.verified") }}
+      </AlertMessage>
 
-        <AlertMessage v-else-if="justVerified" tone="success">
-          {{ t("auth.verify.verified") }}
-        </AlertMessage>
+      <AlertMessage v-else-if="justReset" tone="success">
+        {{ t("auth.reset.done") }}
+      </AlertMessage>
 
-        <AlertMessage v-else-if="justReset" tone="success">
-          {{ t("auth.reset.done") }}
-        </AlertMessage>
+      <AlertMessage v-else-if="sessionExpired" tone="warning">
+        {{ t("auth.login.expired") }}
+      </AlertMessage>
 
-        <AlertMessage v-else-if="sessionExpired" tone="warning">
-          {{ t("auth.login.expired") }}
-        </AlertMessage>
+      <FormField
+        v-model="email"
+        id="email"
+        :label="t('auth.email')"
+        type="email"
+        autocomplete="email"
+        :placeholder="t('auth.emailPlaceholder')"
+        :error="emailError"
+        :error-message="t('auth.errors.invalidEmail')"
+      />
 
-        <FormField
-          v-model="email"
-          id="email"
-          :label="t('auth.email')"
-          type="email"
-          autocomplete="email"
-          :placeholder="t('auth.emailPlaceholder')"
-          :error="emailError"
-          :error-message="t('auth.errors.invalidEmail')"
-        />
+      <FormField
+        v-model="password"
+        id="password"
+        :label="t('auth.password')"
+        type="password"
+        autocomplete="current-password"
+        :placeholder="t('auth.login.passwordPlaceholder')"
+        :error="submitted && !password"
+        show-password-toggle
+      >
+        <template #label-action>
+          <NuxtLink
+            :to="{
+              path: '/forgot-password',
+              query: {
+                email: emailIsValid ? email.trim() : undefined,
+                redirect: returnTo || undefined,
+              },
+            }"
+            >{{ t("auth.login.forgot") }}</NuxtLink
+          >
+        </template>
+      </FormField>
 
-        <FormField
-          v-model="password"
-          id="password"
-          :label="t('auth.password')"
-          type="password"
-          autocomplete="current-password"
-          :placeholder="t('auth.login.passwordPlaceholder')"
-          :error="submitted && !password"
-          show-password-toggle
-        >
-          <template #label-action>
-            <NuxtLink
-              :to="{
-                path: '/forgot-password',
-                query: {
-                  email: emailIsValid ? email.trim() : undefined,
-                  redirect: returnTo || undefined,
-                },
-              }"
-              >{{ t("auth.login.forgot") }}</NuxtLink
-            >
-          </template>
-        </FormField>
+      <SubmitButton :loading="auth.isLoading">
+        {{ t("auth.login.submit") }}
+      </SubmitButton>
+    </form>
 
-        <button
-          type="submit"
-          class="btn btn-primary w-full"
-          :disabled="auth.isLoading"
-        >
-          <span v-if="auth.isLoading" class="loading loading-spinner loading-xs" />
-          {{ t("auth.login.submit") }}
-          <PhArrowRight v-if="!auth.isLoading" :size="16" weight="bold" aria-hidden="true" />
-        </button>
-      </form>
-
-      <p class="help-text">
-        {{ t("auth.login.newHere") }}
-        <NuxtLink
-          :to="{
-            path: '/register',
-            query: { redirect: returnTo || undefined },
-          }"
-          >{{ t("auth.createAccount") }}</NuxtLink
-        >
-      </p>
-    </AuthPanel>
-
-    <AuthFooter />
-  </main>
+    <p class="help-text">
+      {{ t("auth.login.newHere") }}
+      <NuxtLink
+        :to="{
+          path: '/register',
+          query: { redirect: returnTo || undefined },
+        }"
+        >{{ t("auth.createAccount") }}</NuxtLink
+      >
+    </p>
+  </AuthPanel>
 </template>

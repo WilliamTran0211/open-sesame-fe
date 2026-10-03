@@ -24,9 +24,7 @@ function goHome() {
 </script>
 
 <template>
-  <main class="login-page">
-    <ThemeToggle class="auth-theme-toggle" />
-
+  <NuxtLayout name="auth">
     <AuthPanel
       heading-id="error-title"
       :title="notFound ? t('errorPage.notFound.title') : t('errorPage.generic.title')"
@@ -46,7 +44,5 @@ function goHome() {
         <PhArrowRight :size="16" weight="bold" aria-hidden="true" />
       </button>
     </AuthPanel>
-
-    <AuthFooter />
-  </main>
+  </NuxtLayout>
 </template>

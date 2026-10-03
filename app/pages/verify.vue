@@ -1,5 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
+  layout: "auth",
   middleware: [
     "guest",
     () => {
@@ -11,7 +12,6 @@ definePageMeta({
   ],
 });
 
-import { PhArrowRight } from "@phosphor-icons/vue";
 import { resolveLoginRedirect } from "~/utils/oauth";
 
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -29,21 +29,8 @@ const returnTo = computed(
 const otp = ref("");
 const submitted = ref(false);
 const resent = ref(false);
-const cooldown = ref(RESEND_COOLDOWN_SECONDS);
+const { remaining: cooldown, start: startCooldown } = useCooldown(RESEND_COOLDOWN_SECONDS);
 const otpError = computed(() => submitted.value && otp.value.length !== 6);
-let cooldownTimer: number | undefined;
-
-function startCooldown() {
-  cooldown.value = RESEND_COOLDOWN_SECONDS;
-  window.clearInterval(cooldownTimer);
-  cooldownTimer = window.setInterval(() => {
-    cooldown.value -= 1;
-
-    if (cooldown.value <= 0) {
-      window.clearInterval(cooldownTimer);
-    }
-  }, 1000);
-}
 
 async function verify() {
   if (auth.isLoading) {
@@ -128,72 +115,56 @@ onMounted(async () => {
 
   startCooldown();
 });
-
-onBeforeUnmount(() => {
-  window.clearInterval(cooldownTimer);
-});
 </script>
 
 <template>
-  <main class="login-page">
-    <ThemeToggle class="auth-theme-toggle" />
+  <AuthPanel
+    heading-id="verify-title"
+    :title="t('auth.verify.title')"
+    :description="t('auth.verify.description', { email: auth.pendingEmail })"
+    :loading="auth.isLoading"
+  >
+    <form class="auth-form" @submit.prevent="verify">
+      <AlertMessage v-if="auth.error">
+        {{ auth.error }}
+      </AlertMessage>
 
-    <AuthPanel
-      heading-id="verify-title"
-      :title="t('auth.verify.title')"
-      :description="t('auth.verify.description', { email: auth.pendingEmail })"
-      :loading="auth.isLoading"
-    >
-      <form class="auth-form" @submit.prevent="verify">
-        <AlertMessage v-if="auth.error">
-          {{ auth.error }}
-        </AlertMessage>
+      <AlertMessage v-else-if="resent" tone="success">
+        {{ fromSignIn ? t("auth.verify.notVerified") : t("auth.verify.resent") }}
+      </AlertMessage>
 
-        <AlertMessage v-else-if="resent" tone="success">
-          {{ fromSignIn ? t("auth.verify.notVerified") : t("auth.verify.resent") }}
-        </AlertMessage>
+      <OtpInput
+        v-model="otp"
+        id="otp"
+        :label="t('auth.verify.code')"
+        :error="otpError"
+        :error-message="t('auth.verify.codeError')"
+      />
 
-        <OtpInput
-          v-model="otp"
-          id="otp"
-          :label="t('auth.verify.code')"
-          :error="otpError"
-          :error-message="t('auth.verify.codeError')"
-        />
+      <SubmitButton :loading="auth.isLoading">
+        {{ t("auth.verify.submit") }}
+      </SubmitButton>
+    </form>
 
-        <button
-          type="submit"
-          class="btn btn-primary w-full"
-          :disabled="auth.isLoading"
-        >
-          <span v-if="auth.isLoading" class="loading loading-spinner loading-xs" />
-          {{ t("auth.verify.submit") }}
-          <PhArrowRight v-if="!auth.isLoading" :size="16" weight="bold" aria-hidden="true" />
-        </button>
-      </form>
-
-      <p class="help-text">
-        {{ t("auth.verify.noCode") }}
-        <button
-          type="button"
-          class="link link-primary no-underline hover:underline disabled:no-underline disabled:opacity-60"
-          :disabled="cooldown > 0"
-          @click="requestNewCode"
-        >
-          {{
-            cooldown > 0
-              ? t("auth.verify.resendIn", { seconds: cooldown })
-              : t("auth.verify.resend")
-          }}
-        </button>
-        <br />
-        {{ t("auth.verify.wrongEmail") }}
-        <button type="button" class="link link-primary no-underline hover:underline" @click="startOver">{{
-          auth.isAuthenticated ? t("auth.verify.editEmail") : t("auth.verify.startOver")
-        }}</button>
-      </p>
-    </AuthPanel>
-
-    <AuthFooter />
-  </main>
+    <p class="help-text">
+      {{ t("auth.verify.noCode") }}
+      <button
+        type="button"
+        class="link link-primary no-underline hover:underline disabled:no-underline disabled:opacity-60"
+        :disabled="cooldown > 0"
+        @click="requestNewCode"
+      >
+        {{
+          cooldown > 0
+            ? t("auth.verify.resendIn", { seconds: cooldown })
+            : t("auth.verify.resend")
+        }}
+      </button>
+      <br />
+      {{ t("auth.verify.wrongEmail") }}
+      <button type="button" class="link link-primary no-underline hover:underline" @click="startOver">{{
+        auth.isAuthenticated ? t("auth.verify.editEmail") : t("auth.verify.startOver")
+      }}</button>
+    </p>
+  </AuthPanel>
 </template>

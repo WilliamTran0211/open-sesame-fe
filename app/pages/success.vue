@@ -1,5 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
+  layout: "auth",
   middleware: ["auth"],
 });
 
@@ -16,19 +17,15 @@ onBeforeUnmount(() => window.clearTimeout(redirectTimer));
 </script>
 
 <template>
-  <main class="login-page">
-    <ThemeToggle class="auth-theme-toggle" />
-
-    <AuthPanel
-      heading-id="success-title"
-      :title="t('auth.success.title')"
-      :description="t('auth.success.description')"
-      card-class="success-card"
-    >
-      <div class="success-state" role="status" aria-live="polite">
-        <span class="loading loading-spinner loading-md" />
-        <span>{{ t("auth.success.opening") }}</span>
-      </div>
-    </AuthPanel>
-  </main>
+  <AuthPanel
+    heading-id="success-title"
+    :title="t('auth.success.title')"
+    :description="t('auth.success.description')"
+    card-class="success-card"
+  >
+    <div class="success-state" role="status" aria-live="polite">
+      <span class="loading loading-spinner loading-md" />
+      <span>{{ t("auth.success.opening") }}</span>
+    </div>
+  </AuthPanel>
 </template>

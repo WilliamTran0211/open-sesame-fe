@@ -3,7 +3,7 @@ definePageMeta({
   middleware: ["guest"],
 });
 
-import { PhArrowRight, PhLockKey } from "@phosphor-icons/vue";
+import { PhArrowRight } from "@phosphor-icons/vue";
 import type { OAuthClientInfo } from "~/utils/oauth";
 
 const { t } = useI18n();
@@ -29,9 +29,7 @@ const exampleClient: OAuthClientInfo = {
   <main class="landing">
     <header class="landing-nav">
       <NuxtLink to="/" class="dashboard-brand">
-        <span class="brand-mark" aria-hidden="true">
-          <PhLockKey :size="16" weight="bold" />
-        </span>
+        <BrandMark />
         <span>{{ t("brand.name") }}</span>
       </NuxtLink>
       <nav class="landing-links" :aria-label="t('landing.nav.label')">

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 definePageMeta({
+  layout: "auth",
   middleware: ["guest"],
 });
 
-import { PhArrowRight } from "@phosphor-icons/vue";
 import { isValidEmail } from "~/utils/email";
 import { resolveLoginRedirect } from "~/utils/oauth";
 
@@ -50,83 +50,71 @@ async function register() {
 </script>
 
 <template>
-  <main class="login-page">
-    <ThemeToggle class="auth-theme-toggle" />
+  <AuthPanel
+    heading-id="register-title"
+    :title="t('auth.createKey')"
+    :description="t('auth.registerDescription')"
+    card-class="register-card"
+    :loading="auth.isLoading"
+  >
+    <form class="auth-form" @submit.prevent="register">
+      <AlertMessage v-if="auth.error">
+        {{ auth.error }}
+      </AlertMessage>
 
-    <AuthPanel
-      heading-id="register-title"
-      :title="t('auth.createKey')"
-      :description="t('auth.registerDescription')"
-      card-class="register-card"
-      :loading="auth.isLoading"
-    >
-      <form class="auth-form" @submit.prevent="register">
-        <AlertMessage v-if="auth.error">
-          {{ auth.error }}
-        </AlertMessage>
+      <FormField
+        v-model="fullName"
+        id="full-name"
+        :label="t('auth.fullName')"
+        autocomplete="name"
+        :error="fullNameError"
+        :error-message="t('profile.account.nameRequired')"
+      />
 
-        <FormField
-          v-model="fullName"
-          id="full-name"
-          :label="t('auth.fullName')"
-          autocomplete="name"
-          :error="fullNameError"
-          :error-message="t('profile.account.nameRequired')"
-        />
+      <FormField
+        v-model="email"
+        id="email"
+        :label="t('auth.email')"
+        type="email"
+        autocomplete="email"
+        :placeholder="t('auth.emailPlaceholder')"
+        :error="emailError"
+        :error-message="t('auth.errors.invalidEmail')"
+      />
 
-        <FormField
-          v-model="email"
-          id="email"
-          :label="t('auth.email')"
-          type="email"
-          autocomplete="email"
-          :placeholder="t('auth.emailPlaceholder')"
-          :error="emailError"
-          :error-message="t('auth.errors.invalidEmail')"
-        />
+      <PasswordStrengthInput
+        v-model="password"
+        id="password"
+        :label="t('auth.password')"
+        autocomplete="new-password"
+        :placeholder="t('auth.passwordPlaceholder')"
+        :full-name="fullName"
+        :error="submitted && !password"
+      />
 
-        <PasswordStrengthInput
-          v-model="password"
-          id="password"
-          :label="t('auth.password')"
-          autocomplete="new-password"
-          :placeholder="t('auth.passwordPlaceholder')"
-          :full-name="fullName"
-          :error="submitted && !password"
-        />
+      <FormField
+        v-model="confirmPassword"
+        id="confirm-password"
+        :label="t('auth.confirmPassword')"
+        type="password"
+        autocomplete="new-password"
+        :placeholder="t('auth.confirmPasswordPlaceholder')"
+        :error="confirmPasswordError"
+        :error-message="t('auth.errors.passwordMismatch')"
+        show-password-toggle
+      />
 
-        <FormField
-          v-model="confirmPassword"
-          id="confirm-password"
-          :label="t('auth.confirmPassword')"
-          type="password"
-          autocomplete="new-password"
-          :placeholder="t('auth.confirmPasswordPlaceholder')"
-          :error="confirmPasswordError"
-          :error-message="t('auth.errors.passwordMismatch')"
-          show-password-toggle
-        />
+      <SubmitButton :loading="auth.isLoading">
+        {{ t("auth.createAccount") }}
+      </SubmitButton>
+    </form>
 
-        <button
-          type="submit"
-          class="btn btn-primary w-full"
-          :disabled="auth.isLoading"
-        >
-          <span v-if="auth.isLoading" class="loading loading-spinner loading-xs" />
-          {{ t("auth.createAccount") }}
-          <PhArrowRight v-if="!auth.isLoading" :size="16" weight="bold" aria-hidden="true" />
-        </button>
-      </form>
-
-      <p class="help-text">
-        {{ t("auth.alreadyAccount") }}
-        <NuxtLink
-          :to="{ path: '/login', query: { redirect: returnTo || undefined } }"
-          >{{ t("auth.signIn") }}</NuxtLink
-        >
-      </p>
-    </AuthPanel>
-
-    <AuthFooter />
-  </main>
+    <p class="help-text">
+      {{ t("auth.alreadyAccount") }}
+      <NuxtLink
+        :to="{ path: '/login', query: { redirect: returnTo || undefined } }"
+        >{{ t("auth.signIn") }}</NuxtLink
+      >
+    </p>
+  </AuthPanel>
 </template>

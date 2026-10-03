@@ -1,9 +1,9 @@
 <script setup lang="ts">
 definePageMeta({
+  layout: "dashboard",
   middleware: ["auth"],
 });
 
-import { PhArrowLeft } from "@phosphor-icons/vue";
 
 import type { OAuthClientPayload } from "~/utils/oauth";
 
@@ -27,25 +27,20 @@ onMounted(() => {
 </script>
 
 <template>
-  <DashboardShell>
-    <NuxtLink to="/dashboard/clients" class="dash-back">
-      <PhArrowLeft :size="14" aria-hidden="true" />
-      {{ t("clients.back") }}
-    </NuxtLink>
+  <BackLink to="/dashboard/clients">{{ t("clients.back") }}</BackLink>
 
-    <div class="dashboard-intro">
-      <h1>{{ t("clients.createTitle") }}</h1>
-      <p>{{ t("clients.createDescription") }}</p>
-    </div>
+  <PageHeader
+    :title="t('clients.createTitle')"
+    :description="t('clients.createDescription')"
+  />
 
-    <div class="dash-card">
-      <ClientForm
-        mode="create"
-        :loading="clientsStore.isSaving"
-        :error="clientsStore.error"
-        @submit="create"
-        @cancel="navigateTo('/dashboard/clients')"
-      />
-    </div>
-  </DashboardShell>
+  <div class="dash-card">
+    <ClientForm
+      mode="create"
+      :loading="clientsStore.isSaving"
+      :error="clientsStore.error"
+      @submit="create"
+      @cancel="navigateTo('/dashboard/clients')"
+    />
+  </div>
 </template>

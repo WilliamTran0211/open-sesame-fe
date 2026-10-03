@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PhLockKey, PhSignOut } from "@phosphor-icons/vue";
+import { PhSignOut } from "@phosphor-icons/vue";
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -30,9 +30,7 @@ async function signOut() {
   <main class="dashboard-shell">
     <header class="dashboard-header">
       <NuxtLink to="/dashboard" class="dashboard-brand">
-        <div class="brand-mark" aria-hidden="true">
-          <PhLockKey :size="16" weight="bold" />
-        </div>
+        <BrandMark />
         <span>{{ t("brand.name") }}</span>
       </NuxtLink>
 

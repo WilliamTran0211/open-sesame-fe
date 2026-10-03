@@ -1,5 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
+  layout: "auth",
   middleware: [
     "guest",
     () => {
@@ -10,7 +11,6 @@ definePageMeta({
   ],
 });
 
-import { PhArrowRight } from "@phosphor-icons/vue";
 import { resolveLoginRedirect } from "~/utils/oauth";
 
 const auth = useAuthStore();
@@ -36,48 +36,38 @@ async function verify() {
 </script>
 
 <template>
-  <main class="login-page">
-    <ThemeToggle class="auth-theme-toggle" />
+  <AuthPanel
+    heading-id="mfa-title"
+    :title="t('auth.mfa.title')"
+    :description="t('auth.mfa.description')"
+    :loading="auth.isLoading"
+  >
+    <form class="auth-form" @submit.prevent="verify">
+      <AlertMessage v-if="auth.error">
+        {{ auth.error }}
+      </AlertMessage>
 
-    <AuthPanel
-      heading-id="mfa-title"
-      :title="t('auth.mfa.title')"
-      :description="t('auth.mfa.description')"
-      :loading="auth.isLoading"
-    >
-      <form class="auth-form" @submit.prevent="verify">
-        <AlertMessage v-if="auth.error">
-          {{ auth.error }}
-        </AlertMessage>
+      <FormField
+        v-model="code"
+        id="mfa-code"
+        :label="t('auth.mfa.code')"
+        autocomplete="one-time-code"
+        :placeholder="t('auth.mfa.codePlaceholder')"
+        :error="submitted && !code.trim()"
+        :error-message="t('auth.errors.mfaCodeRequired')"
+      />
 
-        <FormField
-          v-model="code"
-          id="mfa-code"
-          :label="t('auth.mfa.code')"
-          autocomplete="one-time-code"
-          :placeholder="t('auth.mfa.codePlaceholder')"
-          :error="submitted && !code.trim()"
-          :error-message="t('auth.errors.mfaCodeRequired')"
-        />
+      <SubmitButton :loading="auth.isLoading">
+        {{ t("auth.mfa.submit") }}
+      </SubmitButton>
+    </form>
 
-        <button
-          type="submit"
-          class="btn btn-primary w-full"
-          :disabled="auth.isLoading"
-        >
-          <span v-if="auth.isLoading" class="loading loading-spinner loading-xs" />
-          {{ t("auth.mfa.submit") }}
-          <PhArrowRight v-if="!auth.isLoading" :size="16" weight="bold" aria-hidden="true" />
-        </button>
-      </form>
-
-      <!-- The API emails a new code with each sign-in; there is no resend for a challenge. -->
-      <p class="help-text">
-        {{ t("auth.mfa.emailHint") }}
-        <NuxtLink :to="{ path: '/login', query: { redirect: route.query.redirect } }">
-          {{ t("auth.mfa.signInAgain") }}
-        </NuxtLink>
-      </p>
-    </AuthPanel>
-  </main>
+    <!-- The API emails a new code with each sign-in; there is no resend for a challenge. -->
+    <p class="help-text">
+      {{ t("auth.mfa.emailHint") }}
+      <NuxtLink :to="{ path: '/login', query: { redirect: route.query.redirect } }">
+        {{ t("auth.mfa.signInAgain") }}
+      </NuxtLink>
+    </p>
+  </AuthPanel>
 </template>

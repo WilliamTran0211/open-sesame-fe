@@ -2,6 +2,7 @@
 import QRCode from "qrcode";
 
 definePageMeta({
+  layout: "dashboard",
   middleware: ["auth"],
 });
 
@@ -114,22 +115,9 @@ const mfaNotice = ref("");
 const mfaBusy = ref(false);
 const recoveryCodes = ref<string[]>([]);
 const mfaCodeSent = ref(false);
-const mfaResendCooldown = ref(0);
+const { remaining: mfaResendCooldown, start: startMfaCooldown } = useCooldown(MFA_RESEND_COOLDOWN_SECONDS);
 // Only known if the profile API reports it; until then offer the email option.
 const usesAuthenticatorApp = computed(() => auth.user?.mfa_method === "totp");
-let mfaCooldownTimer: number | undefined;
-
-function startMfaCooldown() {
-  mfaResendCooldown.value = MFA_RESEND_COOLDOWN_SECONDS;
-  window.clearInterval(mfaCooldownTimer);
-  mfaCooldownTimer = window.setInterval(() => {
-    mfaResendCooldown.value -= 1;
-
-    if (mfaResendCooldown.value <= 0) {
-      window.clearInterval(mfaCooldownTimer);
-    }
-  }, 1000);
-}
 
 async function sendMfaEmailCode() {
   if (mfaResendCooldown.value > 0) {
@@ -301,8 +289,6 @@ async function submitPassword() {
   passwordNotice.value = t("profile.password.changed");
 }
 
-onBeforeUnmount(() => window.clearInterval(mfaCooldownTimer));
-
 onMounted(async () => {
   // Pick up is_verified changes made on /verify.
   await auth.fetchMe();
@@ -322,301 +308,207 @@ watch(
 </script>
 
 <template>
-  <DashboardShell>
-    <div class="dashboard-intro">
-      <h1>{{ t("profile.title") }}</h1>
-      <p>{{ t("profile.description") }}</p>
+  <PageHeader :title="t('profile.title')" :description="t('profile.description')" />
+
+  <section class="dash-card">
+    <div class="dash-card-header">
+      <h2 class="dash-card-title">{{ t("profile.account.title") }}</h2>
+      <span
+        class="badge badge-sm"
+        :class="isVerified ? 'badge-success' : 'badge-warning'"
+      >
+        {{
+          isVerified
+            ? t("profile.account.verified")
+            : t("profile.account.unverified")
+        }}
+      </span>
     </div>
 
-    <section class="dash-card">
-      <div class="dash-card-header">
-        <h2 class="dash-card-title">{{ t("profile.account.title") }}</h2>
-        <span
-          class="badge badge-sm"
-          :class="isVerified ? 'badge-success' : 'badge-warning'"
-        >
-          {{
-            isVerified
-              ? t("profile.account.verified")
-              : t("profile.account.unverified")
-          }}
-        </span>
-      </div>
+    <AlertMessage v-if="!isVerified" tone="warning">
+      {{ t("profile.account.unverifiedHint") }}
+      <template #action>
+        <button type="button" class="btn btn-sm" @click="verifyCurrentEmail">
+          {{ t("profile.account.verifyNow") }}
+        </button>
+      </template>
+    </AlertMessage>
 
-      <AlertMessage v-if="!isVerified" tone="warning">
-        {{ t("profile.account.unverifiedHint") }}
-        <template #action>
-          <button type="button" class="btn btn-sm" @click="verifyCurrentEmail">
-            {{ t("profile.account.verifyNow") }}
-          </button>
-        </template>
-      </AlertMessage>
-
-      <form class="dash-form" novalidate @submit.prevent="submitProfile">
-        <FormField
-          v-model="fullName"
-          id="profile-full-name"
-          :label="t('auth.fullName')"
-          autocomplete="name"
-          :error="fullNameError"
-          :error-message="t('profile.account.nameRequired')"
-        />
-        <FormField
-          v-model="email"
-          id="profile-email"
-          :label="t('auth.email')"
-          type="email"
-          autocomplete="email"
-          :error="emailError"
-          :error-message="t('auth.errors.invalidEmail')"
-        />
-        <p v-if="emailChanged" class="dash-field-hint">
-          {{ t("profile.account.emailChangeHint") }}
-        </p>
-
-        <AlertMessage v-if="profileError">
-          {{ profileError }}
-        </AlertMessage>
-        <AlertMessage v-else-if="profileNotice" tone="success">
-          {{ profileNotice }}
-        </AlertMessage>
-
-        <div class="dash-form-actions">
-          <button
-            type="submit"
-            class="btn btn-primary"
-            :disabled="isSavingProfile"
-          >
-            <span
-              v-if="isSavingProfile"
-              class="loading loading-spinner loading-xs"
-            />
-            {{ t("profile.save") }}
-          </button>
-        </div>
-      </form>
-    </section>
-
-    <section class="dash-card">
-      <h2 class="dash-card-title">{{ t("profile.password.title") }}</h2>
-
-      <form class="dash-form" novalidate @submit.prevent="submitPassword">
-        <!-- Lets password managers pair the new password with this account. -->
-        <input
-          type="text"
-          name="username"
-          autocomplete="username"
-          :value="auth.user?.email"
-          hidden
-          readonly
-        />
-        <FormField
-          v-model="currentPassword"
-          id="current-password"
-          :label="t('profile.password.current')"
-          type="password"
-          autocomplete="current-password"
-          :error="passwordSubmitted && !currentPassword"
-          :error-message="t('profile.password.currentRequired')"
-          show-password-toggle
-        />
-        <div>
-          <PasswordStrengthInput
-            v-model="newPassword"
-            id="new-password"
-            :label="t('profile.password.new')"
-            :placeholder="t('auth.passwordPlaceholder')"
-            :full-name="fullName"
-            :error="!!newPasswordError"
-          />
-          <AlertMessage v-if="newPasswordError" compact>
-            {{ newPasswordError }}
-          </AlertMessage>
-        </div>
-        <FormField
-          v-model="confirmPassword"
-          id="confirm-new-password"
-          :label="t('auth.confirmPassword')"
-          type="password"
-          autocomplete="new-password"
-          :placeholder="t('auth.confirmPasswordPlaceholder')"
-          :error="confirmPasswordError"
-          :error-message="t('auth.errors.passwordMismatch')"
-          show-password-toggle
-        />
-
-        <AlertMessage v-if="passwordError">
-          {{ passwordError }}
-        </AlertMessage>
-        <AlertMessage v-else-if="passwordNotice" tone="success">
-          {{ passwordNotice }}
-        </AlertMessage>
-
-        <div class="dash-form-actions">
-          <button
-            type="submit"
-            class="btn btn-primary"
-            :disabled="isSavingPassword"
-          >
-            <span
-              v-if="isSavingPassword"
-              class="loading loading-spinner loading-xs"
-            />
-            {{ t("profile.password.submit") }}
-          </button>
-        </div>
-      </form>
-    </section>
-
-    <section class="dash-card">
-      <div class="dash-card-header">
-        <h2 class="dash-card-title">{{ t("profile.mfa.title") }}</h2>
-        <span
-          class="badge badge-sm"
-          :class="mfaEnabled ? 'badge-success' : 'badge-neutral'"
-        >
-          {{
-            mfaEnabled === null
-              ? t("profile.mfa.statusUnknown")
-              : mfaEnabled
-                ? t("profile.mfa.statusOn")
-                : t("profile.mfa.statusOff")
-          }}
-        </span>
-      </div>
-      <p class="dash-field-hint">{{ t("profile.mfa.description") }}</p>
-      <p v-if="mfaEnabled === null" class="dash-field-hint">
-        {{ t("profile.mfa.statusHint") }}
+    <form class="dash-form" novalidate @submit.prevent="submitProfile">
+      <FormField
+        v-model="fullName"
+        id="profile-full-name"
+        :label="t('auth.fullName')"
+        autocomplete="name"
+        :error="fullNameError"
+        :error-message="t('profile.account.nameRequired')"
+      />
+      <FormField
+        v-model="email"
+        id="profile-email"
+        :label="t('auth.email')"
+        type="email"
+        autocomplete="email"
+        :error="emailError"
+        :error-message="t('auth.errors.invalidEmail')"
+      />
+      <p v-if="emailChanged" class="dash-field-hint">
+        {{ t("profile.account.emailChangeHint") }}
       </p>
 
-      <div v-if="mfaSetup" class="mt-4 space-y-4">
-        <template v-if="mfaSetup.method === 'totp'">
-          <p>{{ t("profile.mfa.scan") }}</p>
-          <img
-            v-if="mfaQrCode"
-            :src="mfaQrCode"
-            :alt="t('profile.mfa.qrAlt')"
-            width="240"
-            height="240"
-            class="rounded bg-white p-3"
-          />
-          <div>
-            <p class="dash-field-hint">{{ t("profile.mfa.manual") }}</p>
-            <code class="break-all select-all">{{ mfaSetup.secret }}</code>
-          </div>
-        </template>
-        <p v-else>
-          {{ t("profile.mfa.emailSetup", { email: auth.user?.email }) }}
-        </p>
-        <form class="dash-form" novalidate @submit.prevent="enableMfa">
-          <OtpInput
-            v-model="mfaCode"
-            id="mfa-enable-code"
-            :label="
-              mfaSetup.method === 'email'
-                ? t('profile.mfa.emailCode')
-                : t('profile.mfa.code')
-            "
-            :error="!!mfaError && !mfaCode"
-            :error-message="mfaError"
-          />
-          <div class="dash-form-actions">
-            <button type="submit" class="btn btn-primary" :disabled="mfaBusy">
-              <span v-if="mfaBusy" class="loading loading-spinner loading-xs" />
-              {{ t("profile.mfa.confirm") }}
-            </button>
-            <button
-              v-if="mfaSetup.method === 'email'"
-              type="button"
-              class="btn btn-ghost"
-              :disabled="mfaBusy || mfaResendCooldown > 0"
-              @click="sendMfaEmailCode"
-            >
-              {{
-                mfaResendCooldown > 0
-                  ? t("auth.verify.resendIn", { seconds: mfaResendCooldown })
-                  : t("auth.verify.resend")
-              }}
-            </button>
-            <button
-              type="button"
-              class="btn btn-ghost"
-              :disabled="mfaBusy"
-              @click="cancelMfaSetup"
-            >
-              {{ t("profile.mfa.cancel") }}
-            </button>
-          </div>
-        </form>
-      </div>
+      <AlertMessage v-if="profileError">
+        {{ profileError }}
+      </AlertMessage>
+      <AlertMessage v-else-if="profileNotice" tone="success">
+        {{ profileNotice }}
+      </AlertMessage>
 
-      <div v-if="recoveryCodes.length" class="mt-4 space-y-3" role="status">
-        <h3 class="font-semibold">{{ t("profile.mfa.recoveryTitle") }}</h3>
-        <p class="dash-field-hint">
-          {{ t("profile.mfa.recoveryDescription") }}
-        </p>
-        <ul class="grid grid-cols-2 gap-2 font-mono text-sm">
-          <li
-            v-for="recoveryCode in recoveryCodes"
-            :key="recoveryCode"
-            class="rounded border border-base-300 px-3 py-2"
-          >
-            {{ recoveryCode }}
-          </li>
-        </ul>
+      <div class="dash-form-actions">
         <button
-          type="button"
+          type="submit"
           class="btn btn-primary"
-          @click="dismissRecoveryCodes"
+          :disabled="isSavingProfile"
         >
-          {{ t("profile.mfa.closeRecovery") }}
+          <span
+            v-if="isSavingProfile"
+            class="loading loading-spinner loading-xs"
+          />
+          {{ t("profile.save") }}
         </button>
       </div>
+    </form>
+  </section>
 
-      <div
-        v-if="mfaEnabled !== true && !mfaSetup && !recoveryCodes.length"
-        class="mt-4 flex flex-wrap gap-2"
-      >
+  <section class="dash-card">
+    <h2 class="dash-card-title">{{ t("profile.password.title") }}</h2>
+
+    <form class="dash-form" novalidate @submit.prevent="submitPassword">
+      <!-- Lets password managers pair the new password with this account. -->
+      <input
+        type="text"
+        name="username"
+        autocomplete="username"
+        :value="auth.user?.email"
+        hidden
+        readonly
+      />
+      <FormField
+        v-model="currentPassword"
+        id="current-password"
+        :label="t('profile.password.current')"
+        type="password"
+        autocomplete="current-password"
+        :error="passwordSubmitted && !currentPassword"
+        :error-message="t('profile.password.currentRequired')"
+        show-password-toggle
+      />
+      <div>
+        <PasswordStrengthInput
+          v-model="newPassword"
+          id="new-password"
+          :label="t('profile.password.new')"
+          :placeholder="t('auth.passwordPlaceholder')"
+          :full-name="fullName"
+          :error="!!newPasswordError"
+        />
+        <AlertMessage v-if="newPasswordError" compact>
+          {{ newPasswordError }}
+        </AlertMessage>
+      </div>
+      <FormField
+        v-model="confirmPassword"
+        id="confirm-new-password"
+        :label="t('auth.confirmPassword')"
+        type="password"
+        autocomplete="new-password"
+        :placeholder="t('auth.confirmPasswordPlaceholder')"
+        :error="confirmPasswordError"
+        :error-message="t('auth.errors.passwordMismatch')"
+        show-password-toggle
+      />
+
+      <AlertMessage v-if="passwordError">
+        {{ passwordError }}
+      </AlertMessage>
+      <AlertMessage v-else-if="passwordNotice" tone="success">
+        {{ passwordNotice }}
+      </AlertMessage>
+
+      <div class="dash-form-actions">
         <button
-          type="button"
+          type="submit"
           class="btn btn-primary"
-          :disabled="mfaBusy"
-          @click="startMfaSetup('totp')"
+          :disabled="isSavingPassword"
         >
-          <span v-if="mfaBusy" class="loading loading-spinner loading-xs" />
-          {{ t("profile.mfa.setup") }}
-        </button>
-        <button
-          type="button"
-          class="btn btn-outline"
-          :disabled="mfaBusy"
-          @click="startMfaSetup('email')"
-        >
-          {{ t("profile.mfa.setupEmail") }}
+          <span
+            v-if="isSavingPassword"
+            class="loading loading-spinner loading-xs"
+          />
+          {{ t("profile.password.submit") }}
         </button>
       </div>
+    </form>
+  </section>
 
-      <form
-        v-if="mfaEnabled !== false && !mfaSetup && !recoveryCodes.length"
-        class="dash-form mt-4"
-        novalidate
-        @submit.prevent="turnOffMfa"
+  <section class="dash-card">
+    <div class="dash-card-header">
+      <h2 class="dash-card-title">{{ t("profile.mfa.title") }}</h2>
+      <span
+        class="badge badge-sm"
+        :class="mfaEnabled ? 'badge-success' : 'badge-neutral'"
       >
-        <FormField
+        {{
+          mfaEnabled === null
+            ? t("profile.mfa.statusUnknown")
+            : mfaEnabled
+              ? t("profile.mfa.statusOn")
+              : t("profile.mfa.statusOff")
+        }}
+      </span>
+    </div>
+    <p class="dash-field-hint">{{ t("profile.mfa.description") }}</p>
+    <p v-if="mfaEnabled === null" class="dash-field-hint">
+      {{ t("profile.mfa.statusHint") }}
+    </p>
+
+    <div v-if="mfaSetup" class="mt-4 space-y-4">
+      <template v-if="mfaSetup.method === 'totp'">
+        <p>{{ t("profile.mfa.scan") }}</p>
+        <img
+          v-if="mfaQrCode"
+          :src="mfaQrCode"
+          :alt="t('profile.mfa.qrAlt')"
+          width="240"
+          height="240"
+          class="rounded bg-white p-3"
+        />
+        <div>
+          <p class="dash-field-hint">{{ t("profile.mfa.manual") }}</p>
+          <code class="break-all select-all">{{ mfaSetup.secret }}</code>
+        </div>
+      </template>
+      <p v-else>
+        {{ t("profile.mfa.emailSetup", { email: auth.user?.email }) }}
+      </p>
+      <form class="dash-form" novalidate @submit.prevent="enableMfa">
+        <OtpInput
           v-model="mfaCode"
-          id="mfa-disable-code"
-          :label="t('profile.mfa.disableCode')"
-          autocomplete="one-time-code"
-          :placeholder="t('profile.mfa.codePlaceholder')"
+          id="mfa-enable-code"
+          :label="
+            mfaSetup.method === 'email'
+              ? t('profile.mfa.emailCode')
+              : t('profile.mfa.code')
+          "
           :error="!!mfaError && !mfaCode"
           :error-message="mfaError"
         />
         <div class="dash-form-actions">
-          <button type="submit" class="btn btn-outline" :disabled="mfaBusy">
-            {{ t("profile.mfa.disable") }}
+          <button type="submit" class="btn btn-primary" :disabled="mfaBusy">
+            <span v-if="mfaBusy" class="loading loading-spinner loading-xs" />
+            {{ t("profile.mfa.confirm") }}
           </button>
           <button
-            v-if="!usesAuthenticatorApp"
+            v-if="mfaSetup.method === 'email'"
             type="button"
             class="btn btn-ghost"
             :disabled="mfaBusy || mfaResendCooldown > 0"
@@ -625,32 +517,121 @@ watch(
             {{
               mfaResendCooldown > 0
                 ? t("auth.verify.resendIn", { seconds: mfaResendCooldown })
-                : mfaCodeSent
-                  ? t("auth.verify.resend")
-                  : t("profile.mfa.sendEmailCode")
+                : t("auth.verify.resend")
             }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-ghost"
+            :disabled="mfaBusy"
+            @click="cancelMfaSetup"
+          >
+            {{ t("profile.mfa.cancel") }}
           </button>
         </div>
       </form>
+    </div>
 
-      <AlertMessage v-if="mfaError" class="mt-4">
-        {{ mfaError }}
-      </AlertMessage>
-      <AlertMessage v-else-if="mfaNotice" tone="success" class="mt-4">
-        {{ mfaNotice }}
-      </AlertMessage>
-    </section>
+    <div v-if="recoveryCodes.length" class="mt-4 space-y-3" role="status">
+      <h3 class="font-semibold">{{ t("profile.mfa.recoveryTitle") }}</h3>
+      <p class="dash-field-hint">
+        {{ t("profile.mfa.recoveryDescription") }}
+      </p>
+      <ul class="grid grid-cols-2 gap-2 font-mono text-sm">
+        <li
+          v-for="recoveryCode in recoveryCodes"
+          :key="recoveryCode"
+          class="rounded border border-base-300 px-3 py-2"
+        >
+          {{ recoveryCode }}
+        </li>
+      </ul>
+      <button
+        type="button"
+        class="btn btn-primary"
+        @click="dismissRecoveryCodes"
+      >
+        {{ t("profile.mfa.closeRecovery") }}
+      </button>
+    </div>
 
-    <ActiveSessions />
+    <div
+      v-if="mfaEnabled !== true && !mfaSetup && !recoveryCodes.length"
+      class="mt-4 flex flex-wrap gap-2"
+    >
+      <button
+        type="button"
+        class="btn btn-primary"
+        :disabled="mfaBusy"
+        @click="startMfaSetup('totp')"
+      >
+        <span v-if="mfaBusy" class="loading loading-spinner loading-xs" />
+        {{ t("profile.mfa.setup") }}
+      </button>
+      <button
+        type="button"
+        class="btn btn-outline"
+        :disabled="mfaBusy"
+        @click="startMfaSetup('email')"
+      >
+        {{ t("profile.mfa.setupEmail") }}
+      </button>
+    </div>
 
-    <ConfirmDialog
-      :open="confirmEmailChange"
-      :title="t('profile.emailDialog.title')"
-      :message="t('profile.emailDialog.message', { email: normalizedEmail })"
-      :confirm-label="t('profile.emailDialog.confirm')"
-      :loading="isSavingProfile"
-      @confirm="saveProfile"
-      @cancel="confirmEmailChange = false"
-    />
-  </DashboardShell>
+    <form
+      v-if="mfaEnabled !== false && !mfaSetup && !recoveryCodes.length"
+      class="dash-form mt-4"
+      novalidate
+      @submit.prevent="turnOffMfa"
+    >
+      <FormField
+        v-model="mfaCode"
+        id="mfa-disable-code"
+        :label="t('profile.mfa.disableCode')"
+        autocomplete="one-time-code"
+        :placeholder="t('profile.mfa.codePlaceholder')"
+        :error="!!mfaError && !mfaCode"
+        :error-message="mfaError"
+      />
+      <div class="dash-form-actions">
+        <button type="submit" class="btn btn-outline" :disabled="mfaBusy">
+          {{ t("profile.mfa.disable") }}
+        </button>
+        <button
+          v-if="!usesAuthenticatorApp"
+          type="button"
+          class="btn btn-ghost"
+          :disabled="mfaBusy || mfaResendCooldown > 0"
+          @click="sendMfaEmailCode"
+        >
+          {{
+            mfaResendCooldown > 0
+              ? t("auth.verify.resendIn", { seconds: mfaResendCooldown })
+              : mfaCodeSent
+                ? t("auth.verify.resend")
+                : t("profile.mfa.sendEmailCode")
+          }}
+        </button>
+      </div>
+    </form>
+
+    <AlertMessage v-if="mfaError" class="mt-4">
+      {{ mfaError }}
+    </AlertMessage>
+    <AlertMessage v-else-if="mfaNotice" tone="success" class="mt-4">
+      {{ mfaNotice }}
+    </AlertMessage>
+  </section>
+
+  <ActiveSessions />
+
+  <ConfirmDialog
+    :open="confirmEmailChange"
+    :title="t('profile.emailDialog.title')"
+    :message="t('profile.emailDialog.message', { email: normalizedEmail })"
+    :confirm-label="t('profile.emailDialog.confirm')"
+    :loading="isSavingProfile"
+    @confirm="saveProfile"
+    @cancel="confirmEmailChange = false"
+  />
 </template>

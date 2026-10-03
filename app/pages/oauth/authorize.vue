@@ -1,5 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
+  layout: "auth",
   middleware: ["auth"],
 });
 
@@ -83,100 +84,94 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="login-page">
-    <ThemeToggle class="auth-theme-toggle" />
+  <AuthPanel
+    v-if="!request"
+    heading-id="consent-title"
+    :title="t('oauth.invalid.title')"
+    :description="t(`oauth.invalid.${parsed.error}`)"
+    card-class="oauth-card"
+  >
+    <NuxtLink to="/dashboard" class="btn btn-outline w-full">
+      {{ t("oauth.backToDashboard") }}
+    </NuxtLink>
+  </AuthPanel>
 
-    <AuthPanel
-      v-if="!request"
-      heading-id="consent-title"
-      :title="t('oauth.invalid.title')"
-      :description="t(`oauth.invalid.${parsed.error}`)"
-      card-class="oauth-card"
-    >
-      <NuxtLink to="/dashboard" class="btn btn-outline w-full">
-        {{ t("oauth.backToDashboard") }}
-      </NuxtLink>
-    </AuthPanel>
+  <AuthPanel
+    v-else-if="consentState === 'cancelled'"
+    heading-id="consent-title"
+    :title="t('oauth.cancelled.title')"
+    :description="t('oauth.cancelled.description', { app: appName })"
+    card-class="oauth-card"
+  >
+    <NuxtLink to="/dashboard" class="btn btn-outline w-full">
+      {{ t("oauth.backToDashboard") }}
+    </NuxtLink>
+  </AuthPanel>
 
-    <AuthPanel
-      v-else-if="consentState === 'cancelled'"
-      heading-id="consent-title"
-      :title="t('oauth.cancelled.title')"
-      :description="t('oauth.cancelled.description', { app: appName })"
-      card-class="oauth-card"
-    >
-      <NuxtLink to="/dashboard" class="btn btn-outline w-full">
-        {{ t("oauth.backToDashboard") }}
-      </NuxtLink>
-    </AuthPanel>
+  <AuthPanel
+    v-else
+    heading-id="consent-title"
+    :title="t('oauth.title', { app: appName })"
+    :description="t('oauth.description')"
+    card-class="oauth-card"
+    :loading="consentState === 'redirecting'"
+  >
+    <div class="oauth-consent">
+      <OAuthClientSummary
+        :client-id="request.clientId"
+        :redirect-uri="request.redirectUri"
+        :client="client"
+        :loading="isClientLoading"
+      />
 
-    <AuthPanel
-      v-else
-      heading-id="consent-title"
-      :title="t('oauth.title', { app: appName })"
-      :description="t('oauth.description')"
-      card-class="oauth-card"
-      :loading="consentState === 'redirecting'"
-    >
-      <div class="oauth-consent">
-        <OAuthClientSummary
-          :client-id="request.clientId"
-          :redirect-uri="request.redirectUri"
-          :client="client"
-          :loading="isClientLoading"
-        />
+      <OAuthAccountChip
+        :name="userName"
+        :email="auth.user?.email"
+        @switch="switchAccount"
+      />
 
-        <OAuthAccountChip
-          :name="userName"
-          :email="auth.user?.email"
-          @switch="switchAccount"
-        />
-
-        <div>
-          <p class="oauth-section-label">
-            {{ t("oauth.permissionsLabel", { app: appName }) }}
-          </p>
-          <OAuthScopeList :scopes="grantedScopes" />
-          <p v-if="scopesNarrowed" class="dash-field-hint mt-3">
-            {{ t("oauth.scopesNarrowed", { app: appName }) }}
-          </p>
-        </div>
-
-        <AlertMessage v-if="clientInactive">
-          {{ t("oauth.client.inactive") }}
-        </AlertMessage>
-
-        <p class="oauth-fine-print">
-          {{
-            t("oauth.finePrint", {
-              app: appName,
-              host: getUrlHost(request.redirectUri),
-            })
-          }}
+      <div>
+        <p class="oauth-section-label">
+          {{ t("oauth.permissionsLabel", { app: appName }) }}
         </p>
-
-        <div class="oauth-actions">
-          <button
-            type="button"
-            class="btn btn-outline"
-            :disabled="consentState === 'redirecting'"
-            @click="deny"
-          >
-            {{ t("oauth.deny") }}
-          </button>
-          <button
-            type="button"
-            class="btn btn-primary"
-            :disabled="consentState === 'redirecting' || clientInactive"
-            @click="allow"
-          >
-            {{ t("oauth.allow") }}
-            <PhArrowRight :size="16" weight="bold" aria-hidden="true" />
-          </button>
-        </div>
+        <OAuthScopeList :scopes="grantedScopes" />
+        <p v-if="scopesNarrowed" class="dash-field-hint mt-3">
+          {{ t("oauth.scopesNarrowed", { app: appName }) }}
+        </p>
       </div>
-    </AuthPanel>
 
-    <AuthFooter />
-  </main>
+      <AlertMessage v-if="clientInactive">
+        {{ t("oauth.client.inactive") }}
+      </AlertMessage>
+
+      <p class="oauth-fine-print">
+        {{
+          t("oauth.finePrint", {
+            app: appName,
+            host: getUrlHost(request.redirectUri),
+          })
+        }}
+      </p>
+
+      <div class="oauth-actions">
+        <button
+          type="button"
+          class="btn btn-outline"
+          :disabled="consentState === 'redirecting'"
+          @click="deny"
+        >
+          {{ t("oauth.deny") }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          :disabled="consentState === 'redirecting' || clientInactive"
+          @click="allow"
+        >
+          {{ t("oauth.allow") }}
+          <PhArrowRight :size="16" weight="bold" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  </AuthPanel>
 </template>

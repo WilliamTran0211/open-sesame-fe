@@ -25,6 +25,8 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
   },
   css: ["~/assets/css/main.css"],
+  // Components are grouped in folders by role; their names stay the file names.
+  components: [{ path: "~/components", pathPrefix: false }],
   // Auth is only known in the browser, so don't server-render protected pages.
   routeRules: {
     "/**": {

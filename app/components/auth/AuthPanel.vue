@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { PhLockKey } from "@phosphor-icons/vue";
 
 const { t } = useI18n();
 
@@ -27,9 +26,7 @@ defineProps<{
       <span class="loading loading-spinner loading-md" />
     </div>
     <div class="login-brand">
-      <div class="brand-mark" aria-hidden="true">
-        <PhLockKey :size="20" weight="bold" />
-      </div>
+      <BrandMark :size="20" />
       <div>
         <p class="brand-name">{{ t("brand.name") }}</p>
         <p class="brand-kicker">{{ t("brand.kicker") }}</p>

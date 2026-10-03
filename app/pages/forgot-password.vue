@@ -1,9 +1,9 @@
 <script setup lang="ts">
 definePageMeta({
+  layout: "auth",
   middleware: ["guest"],
 });
 
-import { PhArrowRight } from "@phosphor-icons/vue";
 import { isValidEmail } from "~/utils/email";
 import { resolveLoginRedirect } from "~/utils/oauth";
 import { isPasswordQualified } from "~/utils/password";
@@ -32,8 +32,7 @@ const submitted = ref(false);
 const isLoading = ref(false);
 const error = ref("");
 const resent = ref(false);
-const cooldown = ref(0);
-let cooldownTimer: number | undefined;
+const { remaining: cooldown, start: startCooldown } = useCooldown(RESEND_COOLDOWN_SECONDS);
 
 const normalizedEmail = computed(() => email.value.trim().toLowerCase());
 const emailError = computed(
@@ -48,18 +47,6 @@ const confirmPasswordError = computed(
     (submitted.value || !!confirmPassword.value) &&
     confirmPassword.value !== newPassword.value,
 );
-
-function startCooldown() {
-  cooldown.value = RESEND_COOLDOWN_SECONDS;
-  window.clearInterval(cooldownTimer);
-  cooldownTimer = window.setInterval(() => {
-    cooldown.value -= 1;
-
-    if (cooldown.value <= 0) {
-      window.clearInterval(cooldownTimer);
-    }
-  }, 1000);
-}
 
 async function sendCode() {
   isLoading.value = true;
@@ -138,140 +125,120 @@ function changeEmail() {
   resent.value = false;
   otp.value = "";
 }
-
-onBeforeUnmount(() => {
-  window.clearInterval(cooldownTimer);
-});
 </script>
 
 <template>
-  <main class="login-page">
-    <ThemeToggle class="auth-theme-toggle" />
+  <AuthPanel
+    v-if="step === 'request'"
+    heading-id="reset-title"
+    :title="t('auth.reset.title')"
+    :description="t('auth.reset.description')"
+    :loading="isLoading"
+  >
+    <form class="auth-form" novalidate @submit.prevent="submitRequest">
+      <AlertMessage v-if="error">
+        {{ error }}
+      </AlertMessage>
 
-    <AuthPanel
-      v-if="step === 'request'"
-      heading-id="reset-title"
-      :title="t('auth.reset.title')"
-      :description="t('auth.reset.description')"
-      :loading="isLoading"
-    >
-      <form class="auth-form" novalidate @submit.prevent="submitRequest">
-        <AlertMessage v-if="error">
-          {{ error }}
-        </AlertMessage>
+      <FormField
+        v-model="email"
+        id="email"
+        :label="t('auth.email')"
+        type="email"
+        autocomplete="email"
+        :placeholder="t('auth.emailPlaceholder')"
+        :error="emailError"
+        :error-message="t('auth.errors.invalidEmail')"
+      />
 
-        <FormField
-          v-model="email"
-          id="email"
-          :label="t('auth.email')"
-          type="email"
-          autocomplete="email"
-          :placeholder="t('auth.emailPlaceholder')"
-          :error="emailError"
-          :error-message="t('auth.errors.invalidEmail')"
-        />
+      <SubmitButton :loading="isLoading">
+        {{ t("auth.reset.send") }}
+      </SubmitButton>
+    </form>
 
-        <button
-          type="submit"
-          class="btn btn-primary w-full"
-          :disabled="isLoading"
-        >
-          {{ t("auth.reset.send") }}
-          <PhArrowRight :size="16" weight="bold" aria-hidden="true" />
-        </button>
-      </form>
+    <p class="help-text">
+      {{ t("auth.reset.remembered") }}
+      <NuxtLink :to="{ path: '/login', query: { redirect: returnTo } }">{{
+        t("auth.signIn")
+      }}</NuxtLink>
+    </p>
+  </AuthPanel>
 
-      <p class="help-text">
-        {{ t("auth.reset.remembered") }}
-        <NuxtLink :to="{ path: '/login', query: { redirect: returnTo } }">{{
-          t("auth.signIn")
-        }}</NuxtLink>
-      </p>
-    </AuthPanel>
+  <AuthPanel
+    v-else
+    heading-id="reset-title"
+    :title="t('auth.reset.confirmTitle')"
+    :description="t('auth.reset.confirmDescription', { email: normalizedEmail })"
+    :loading="isLoading"
+  >
+    <form class="auth-form" novalidate @submit.prevent="submitConfirm">
+      <AlertMessage v-if="error">
+        {{ error }}
+      </AlertMessage>
+      <AlertMessage v-else-if="newPasswordError">
+        {{ t("auth.errors.weakPassword") }}
+      </AlertMessage>
+      <AlertMessage v-else-if="resent" tone="success">
+        {{ t("auth.verify.resent") }}
+      </AlertMessage>
 
-    <AuthPanel
-      v-else
-      heading-id="reset-title"
-      :title="t('auth.reset.confirmTitle')"
-      :description="t('auth.reset.confirmDescription', { email: normalizedEmail })"
-      :loading="isLoading"
-    >
-      <form class="auth-form" novalidate @submit.prevent="submitConfirm">
-        <AlertMessage v-if="error">
-          {{ error }}
-        </AlertMessage>
-        <AlertMessage v-else-if="newPasswordError">
-          {{ t("auth.errors.weakPassword") }}
-        </AlertMessage>
-        <AlertMessage v-else-if="resent" tone="success">
-          {{ t("auth.verify.resent") }}
-        </AlertMessage>
+      <!-- Lets password managers pair the new password with this account. -->
+      <input
+        type="text"
+        name="username"
+        autocomplete="username"
+        :value="normalizedEmail"
+        hidden
+        readonly
+      />
+      <OtpInput
+        v-model="otp"
+        id="otp"
+        :label="t('auth.verify.code')"
+        :error="otpError"
+        :error-message="t('auth.verify.codeError')"
+      />
+      <PasswordStrengthInput
+        v-model="newPassword"
+        id="new-password"
+        :label="t('profile.password.new')"
+        :placeholder="t('auth.passwordPlaceholder')"
+        :error="newPasswordError"
+      />
+      <FormField
+        v-model="confirmPassword"
+        id="confirm-password"
+        :label="t('auth.confirmPassword')"
+        type="password"
+        autocomplete="new-password"
+        :placeholder="t('auth.confirmPasswordPlaceholder')"
+        :error="confirmPasswordError"
+        :error-message="t('auth.errors.passwordMismatch')"
+        show-password-toggle
+      />
 
-        <!-- Lets password managers pair the new password with this account. -->
-        <input
-          type="text"
-          name="username"
-          autocomplete="username"
-          :value="normalizedEmail"
-          hidden
-          readonly
-        />
-        <OtpInput
-          v-model="otp"
-          id="otp"
-          :label="t('auth.verify.code')"
-          :error="otpError"
-          :error-message="t('auth.verify.codeError')"
-        />
-        <PasswordStrengthInput
-          v-model="newPassword"
-          id="new-password"
-          :label="t('profile.password.new')"
-          :placeholder="t('auth.passwordPlaceholder')"
-          :error="newPasswordError"
-        />
-        <FormField
-          v-model="confirmPassword"
-          id="confirm-password"
-          :label="t('auth.confirmPassword')"
-          type="password"
-          autocomplete="new-password"
-          :placeholder="t('auth.confirmPasswordPlaceholder')"
-          :error="confirmPasswordError"
-          :error-message="t('auth.errors.passwordMismatch')"
-          show-password-toggle
-        />
+      <SubmitButton :loading="isLoading">
+        {{ t("auth.reset.submit") }}
+      </SubmitButton>
+    </form>
 
-        <button
-          type="submit"
-          class="btn btn-primary w-full"
-          :disabled="isLoading"
-        >
-          {{ t("auth.reset.submit") }}
-          <PhArrowRight :size="16" weight="bold" aria-hidden="true" />
-        </button>
-      </form>
-
-      <p class="help-text">
-        {{ t("auth.verify.noCode") }}
-        <button
-          type="button"
-          class="link link-primary no-underline hover:underline disabled:no-underline disabled:opacity-60"
-          :disabled="cooldown > 0 || isLoading"
-          @click="resend"
-        >
-          {{
-            cooldown > 0
-              ? t("auth.verify.resendIn", { seconds: cooldown })
-              : t("auth.verify.resend")
-          }}
-        </button>
-        <br />
-        {{ t("auth.verify.wrongEmail") }}
-        <button type="button" class="link link-primary no-underline hover:underline" @click="changeEmail">{{ t("auth.verify.editEmail") }}</button>
-      </p>
-    </AuthPanel>
-
-    <AuthFooter />
-  </main>
+    <p class="help-text">
+      {{ t("auth.verify.noCode") }}
+      <button
+        type="button"
+        class="link link-primary no-underline hover:underline disabled:no-underline disabled:opacity-60"
+        :disabled="cooldown > 0 || isLoading"
+        @click="resend"
+      >
+        {{
+          cooldown > 0
+            ? t("auth.verify.resendIn", { seconds: cooldown })
+            : t("auth.verify.resend")
+        }}
+      </button>
+      <br />
+      {{ t("auth.verify.wrongEmail") }}
+      <button type="button" class="link link-primary no-underline hover:underline" @click="changeEmail">{{ t("auth.verify.editEmail") }}</button>
+    </p>
+  </AuthPanel>
 </template>
