@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import QRCode from "qrcode";
+import { PhCopy, PhDownloadSimple } from "@phosphor-icons/vue";
 
 definePageMeta({
   layout: "dashboard",
@@ -211,17 +212,21 @@ function cancelMfaSetup() {
   mfaNotice.value = "";
 }
 
+// A 6-digit app or email code, or one of the 10-character recovery codes.
+const DISABLE_CODE_PATTERN = /^(\d{6}|[A-Za-z0-9_-]{10})$/;
+
 async function turnOffMfa() {
   mfaError.value = "";
   mfaNotice.value = "";
+  const code = mfaCode.value.trim();
 
-  if (!/^\d{6}$/.test(mfaCode.value)) {
-    mfaError.value = t("profile.mfa.errors.code");
+  if (!DISABLE_CODE_PATTERN.test(code)) {
+    mfaError.value = t("profile.mfa.errors.disableCode");
     return;
   }
 
   mfaBusy.value = true;
-  const error = await auth.disableMfa(mfaCode.value);
+  const error = await auth.disableMfa(code);
   mfaBusy.value = false;
 
   if (error) {
@@ -234,6 +239,37 @@ async function turnOffMfa() {
   mfaCode.value = "";
   mfaCodeSent.value = false;
   mfaNotice.value = t("profile.mfa.disabled");
+}
+
+const recoveryCopied = ref(false);
+
+function recoveryCodesText() {
+  return [
+    t("profile.mfa.recoveryFileHeading", { email: auth.user?.email ?? "" }),
+    t("profile.mfa.recoveryFileNote"),
+    "",
+    ...recoveryCodes.value,
+    "",
+  ].join("\n");
+}
+
+async function copyRecoveryCodes() {
+  try {
+    await navigator.clipboard.writeText(recoveryCodes.value.join("\n"));
+    recoveryCopied.value = true;
+    window.setTimeout(() => (recoveryCopied.value = false), 2000);
+  } catch {
+    // Clipboard refused (permissions); the codes stay on screen to copy by hand.
+  }
+}
+
+function downloadRecoveryCodes() {
+  const url = URL.createObjectURL(new Blob([recoveryCodesText()], { type: "text/plain" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "open-sesame-recovery-codes.txt";
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function dismissRecoveryCodes() {
@@ -548,13 +584,23 @@ useHead({ title: () => t("titles.profile") });
           {{ recoveryCode }}
         </li>
       </ul>
-      <button
-        type="button"
-        class="btn btn-primary"
-        @click="dismissRecoveryCodes"
-      >
-        {{ t("profile.mfa.closeRecovery") }}
-      </button>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="btn btn-ghost" @click="copyRecoveryCodes">
+          <PhCopy :size="16" aria-hidden="true" />
+          {{ recoveryCopied ? t("clients.copied") : t("profile.mfa.copyRecovery") }}
+        </button>
+        <button type="button" class="btn btn-ghost" @click="downloadRecoveryCodes">
+          <PhDownloadSimple :size="16" aria-hidden="true" />
+          {{ t("profile.mfa.downloadRecovery") }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          @click="dismissRecoveryCodes"
+        >
+          {{ t("profile.mfa.closeRecovery") }}
+        </button>
+      </div>
     </div>
 
     <div
