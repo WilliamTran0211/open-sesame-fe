@@ -209,6 +209,7 @@
       "weakPassword": "Choose a stronger password that meets every requirement and doesn't include your name or a common word.",
       "passwordMismatch": "Passwords must match.",
       "signIn": "Unable to sign in. Check your email and password.",
+      "wrongCredentials": "Wrong email or password.",
       "register": "Unable to create your account. Please try again.",
       "signOut": "Unable to sign out.",
       "otpRequired": "Enter the 6-digit code from your email.",
@@ -218,6 +219,8 @@
       "profile": "Unable to load your profile.",
       "mfaCodeRequired": "Enter the 6-digit code.",
       "recoveryCodeInvalid": "Recovery codes are 10 characters.",
+      "mfaWrongCode": "That code didn't work. Check it and try again.",
+      "mfaExpired": "This sign-in has expired. Sign in again.",
       "mfaVerify": "Unable to verify your code. Please try again."
     }
   },

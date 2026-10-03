@@ -177,7 +177,10 @@ export const useAuthStore = defineStore("auth", () => {
         return "unverified";
       }
 
-      error.value = apiErrorMessage(requestError, "auth.errors.signIn");
+      // The API answers a wrong email or password with a bare "Authentication required".
+      error.value = apiErrorMessage(requestError, "auth.errors.signIn", {
+        401: "auth.errors.wrongCredentials",
+      });
       return "failed";
     }
   }
@@ -199,7 +202,14 @@ export const useAuthStore = defineStore("auth", () => {
       clearPendingEmail();
       return !!(await fetchMe());
     } catch (requestError) {
-      error.value = apiErrorMessage(requestError, "auth.errors.mfaVerify");
+      // invalid_grant: the challenge expired or ran out of attempts; a new sign-in is needed.
+      const expired =
+        (requestError as { data?: ApiError })?.data?.error === "invalid_grant";
+      error.value = apiErrorMessage(
+        requestError,
+        expired ? "auth.errors.mfaExpired" : "auth.errors.mfaVerify",
+        expired ? { 400: "auth.errors.mfaExpired" } : { 400: "auth.errors.mfaWrongCode" },
+      );
       return false;
     } finally {
       isLoading.value = false;
