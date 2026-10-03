@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
-import { apiFetch, trackRequest } from "~/utils/api";
+import { scopesApi } from "~/services/scopes";
+import { trackRequest } from "~/utils/api";
 import type { OAuthScope } from "~/utils/oauth";
 
 // Active scopes a client may be granted. Readable by any signed-in user;
@@ -18,7 +19,7 @@ export const useScopesStore = defineStore("scopes", () => {
 
     const list = await trackRequest(
       { pending: isLoading, error },
-      () => apiFetch<OAuthScope[]>("/scopes/list"),
+      scopesApi.list,
       "scopes.errors.load",
     );
 
@@ -29,17 +30,8 @@ export const useScopesStore = defineStore("scopes", () => {
   }
 
   // The list endpoint only returns active scopes, so it is patched locally from the response.
-  async function mutate(
-    path: string,
-    method: "POST" | "PATCH" | "DELETE",
-    body: object | undefined,
-    fallbackKey: string,
-  ) {
-    const scope = await trackRequest(
-      { pending: isSaving, error },
-      () => apiFetch<OAuthScope>(`/scopes${path}`, { method, body }),
-      fallbackKey,
-    );
+  async function mutate(action: () => Promise<OAuthScope>, fallbackKey: string) {
+    const scope = await trackRequest({ pending: isSaving, error }, action, fallbackKey);
 
     if (scope) {
       const others = scopes.value.filter((item) => item.name !== scope.name);
@@ -53,25 +45,15 @@ export const useScopesStore = defineStore("scopes", () => {
   }
 
   function createScope(name: string, description: string) {
-    return mutate("/", "POST", { name, description }, "scopes.errors.create");
+    return mutate(() => scopesApi.create(name, description), "scopes.errors.create");
   }
 
   function updateScope(name: string, description: string) {
-    return mutate(
-      `/${encodeURIComponent(name)}`,
-      "PATCH",
-      { description },
-      "scopes.errors.update",
-    );
+    return mutate(() => scopesApi.update(name, description), "scopes.errors.update");
   }
 
   function deactivateScope(name: string) {
-    return mutate(
-      `/${encodeURIComponent(name)}`,
-      "DELETE",
-      undefined,
-      "scopes.errors.deactivate",
-    );
+    return mutate(() => scopesApi.deactivate(name), "scopes.errors.deactivate");
   }
 
   function findScope(name: string) {

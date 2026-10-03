@@ -1,9 +1,6 @@
 import { defineStore } from "pinia";
-import {
-  apiFetch,
-  trackRequest,
-  type ApiRequestOptions,
-} from "~/utils/api";
+import { clientsApi } from "~/services/clients";
+import { trackRequest } from "~/utils/api";
 import type { OAuthClient, OAuthClientPayload } from "~/utils/oauth";
 
 type RevealedSecret = {
@@ -19,11 +16,6 @@ export const useClientsStore = defineStore("clients", () => {
   // A plaintext secret is only returned once (create / rotate); keep it until the
   // detail page has shown it, then drop it.
   const revealedSecret = ref<RevealedSecret | null>(null);
-
-  // Expired sessions are handled once, in apiFetch.
-  function request<T>(path: string, options: ApiRequestOptions = {}) {
-    return apiFetch<T>(`/clients${path}`, options);
-  }
 
   function upsert(client: OAuthClient) {
     const index = clients.value.findIndex(
@@ -41,12 +33,16 @@ export const useClientsStore = defineStore("clients", () => {
     return clients.value.find((item) => item.client_id === clientId) || null;
   }
 
+  function load<T>(action: () => Promise<T>, fallbackKey: string) {
+    return trackRequest({ pending: isLoading, error }, action, fallbackKey);
+  }
+
+  function mutate<T>(action: () => Promise<T>, fallbackKey: string) {
+    return trackRequest({ pending: isSaving, error }, action, fallbackKey);
+  }
+
   async function fetchClients() {
-    const list = await trackRequest(
-      { pending: isLoading, error },
-      () => request<OAuthClient[]>("/"),
-      "clients.errors.load",
-    );
+    const list = await load(clientsApi.list, "clients.errors.load");
 
     if (list) {
       clients.value = list;
@@ -54,11 +50,7 @@ export const useClientsStore = defineStore("clients", () => {
   }
 
   async function fetchClient(clientId: string) {
-    const client = await trackRequest(
-      { pending: isLoading, error },
-      () => request<OAuthClient>(`/${encodeURIComponent(clientId)}`),
-      "clients.errors.loadOne",
-    );
+    const client = await load(() => clientsApi.get(clientId), "clients.errors.loadOne");
 
     if (client) {
       upsert(client);
@@ -67,17 +59,9 @@ export const useClientsStore = defineStore("clients", () => {
     return client;
   }
 
-  function mutate<T>(action: () => Promise<T>, fallbackKey: string) {
-    return trackRequest({ pending: isSaving, error }, action, fallbackKey);
-  }
-
   function createClient(payload: OAuthClientPayload) {
     return mutate(async () => {
-      const created = await request<OAuthClient & { client_secret: string | null }>(
-        "/",
-        { method: "POST", body: payload },
-      );
-      const { client_secret: secret, ...client } = created;
+      const { client_secret: secret, ...client } = await clientsApi.create(payload);
 
       upsert(client);
 
@@ -91,10 +75,7 @@ export const useClientsStore = defineStore("clients", () => {
 
   function updateClient(clientId: string, payload: Partial<OAuthClientPayload>) {
     return mutate(async () => {
-      const client = await request<OAuthClient>(
-        `/${encodeURIComponent(clientId)}`,
-        { method: "PATCH", body: payload },
-      );
+      const client = await clientsApi.update(clientId, payload);
       upsert(client);
       return client;
     }, "clients.errors.update");
@@ -102,10 +83,7 @@ export const useClientsStore = defineStore("clients", () => {
 
   function rotateSecret(clientId: string) {
     return mutate(async () => {
-      const { client_secret: secret } = await request<{ client_secret: string }>(
-        `/${encodeURIComponent(clientId)}/rotate-secret`,
-        { method: "POST" },
-      );
+      const { client_secret: secret } = await clientsApi.rotateSecret(clientId);
       revealedSecret.value = { clientId, secret };
       return secret;
     }, "clients.errors.rotate");
@@ -113,12 +91,9 @@ export const useClientsStore = defineStore("clients", () => {
 
   function setActive(clientId: string, active: boolean) {
     return mutate(async () => {
-      const client = await request<OAuthClient>(
-        active
-          ? `/${encodeURIComponent(clientId)}/activate`
-          : `/${encodeURIComponent(clientId)}`,
-        { method: active ? "POST" : "DELETE" },
-      );
+      const client = active
+        ? await clientsApi.activate(clientId)
+        : await clientsApi.deactivate(clientId);
       upsert(client);
       return client;
     }, active ? "clients.errors.activate" : "clients.errors.deactivate");

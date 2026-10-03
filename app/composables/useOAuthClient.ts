@@ -1,4 +1,4 @@
-import { apiFetch } from "~/utils/api";
+import { clientsApi } from "~/services/clients";
 import type { OAuthClientInfo } from "~/utils/oauth";
 
 // Looks up the app asking for access so the consent screen can name it.
@@ -12,9 +12,7 @@ export function useOAuthClient() {
     isLoading.value = true;
 
     try {
-      client.value = await apiFetch<OAuthClientInfo>(
-        `/clients/${encodeURIComponent(clientId)}`,
-      );
+      client.value = await clientsApi.getInfo(clientId);
     } catch {
       client.value = null;
     } finally {
