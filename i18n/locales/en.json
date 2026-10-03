@@ -4,7 +4,26 @@
     "useLight": "Switch to light theme"
   },
   "common": {
-    "loading": "Loading"
+    "loading": "Loading",
+    "errors": {
+      "network": "Can't reach Open Sesame right now. Check your connection and try again in a moment.",
+      "rateLimited": "Too many attempts. Wait a few minutes, then try again."
+    }
+  },
+  "titles": {
+    "signIn": "Sign in",
+    "register": "Create account",
+    "verify": "Verify your email",
+    "reset": "Reset password",
+    "mfa": "Two-factor sign-in",
+    "success": "Signed in",
+    "consent": "Authorize {app}",
+    "consentGeneric": "Authorize app",
+    "overview": "Overview",
+    "clients": "OAuth clients",
+    "newClient": "New client",
+    "scopes": "Scopes",
+    "profile": "Profile"
   },
   "errorPage": {
     "status": "Error {status}",

@@ -89,9 +89,24 @@ export function apiErrorMessage(
   statusKeys: StatusMessageKeys = {},
 ) {
   const { t } = useNuxtApp().$i18n;
-  const statusKey = statusKeys[getErrorStatus(error) ?? 0];
+  const status = getErrorStatus(error);
+  const statusKey = statusKeys[status ?? 0];
 
-  return statusKey ? t(statusKey) : getErrorMessage(error, t(fallbackKey));
+  if (statusKey) {
+    return t(statusKey);
+  }
+
+  // No response at all: the API is down or unreachable, not a problem with the input.
+  if (status === undefined) {
+    return t("common.errors.network");
+  }
+
+  // The API only says "Too many requests"; tell people what to do about it.
+  if (status === 429) {
+    return t("common.errors.rateLimited");
+  }
+
+  return getErrorMessage(error, t(fallbackKey));
 }
 
 // Runs a request and hands back either its data or a message ready to show.
