@@ -305,6 +305,8 @@ watch(
     }
   },
 );
+
+useHead({ title: () => t("titles.profile") });
 </script>
 
 <template>

@@ -37,6 +37,8 @@ const counts = computed(() => ({
 onMounted(() => {
   clientsStore.fetchClients();
 });
+
+useHead({ title: () => t("titles.clients") });
 </script>
 
 <template>

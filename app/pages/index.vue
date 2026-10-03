@@ -8,6 +8,9 @@ import type { OAuthClientInfo } from "~/utils/oauth";
 
 const { t } = useI18n();
 
+// The landing title already names the product; skip the " · Open Sesame" suffix.
+useHead({ titleTemplate: null });
+
 useSeoMeta({
   title: () => t("landing.meta.title"),
   description: () => t("landing.description"),

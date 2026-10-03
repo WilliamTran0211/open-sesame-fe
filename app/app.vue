@@ -5,6 +5,7 @@ const { isDark } = useTheme();
 
 // Set the theme before first paint so dark-mode users don't see a light flash.
 useHead({
+  titleTemplate: (title) => (title ? `${title} · Open Sesame` : "Open Sesame"),
   script: [
     {
       tagPosition: "head",

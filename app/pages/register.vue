@@ -47,6 +47,8 @@ async function register() {
     });
   }
 }
+
+useHead({ title: () => t("titles.register") });
 </script>
 
 <template>

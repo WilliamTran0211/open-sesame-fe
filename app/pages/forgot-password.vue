@@ -125,6 +125,8 @@ function changeEmail() {
   resent.value = false;
   otp.value = "";
 }
+
+useHead({ title: () => t("titles.reset") });
 </script>
 
 <template>

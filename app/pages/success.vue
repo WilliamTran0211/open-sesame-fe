@@ -14,6 +14,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => window.clearTimeout(redirectTimer));
+
+useHead({ title: () => t("titles.success") });
 </script>
 
 <template>

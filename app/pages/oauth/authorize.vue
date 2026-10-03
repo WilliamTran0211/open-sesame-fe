@@ -81,6 +81,8 @@ onMounted(() => {
     loadClient(request.value.clientId);
   }
 });
+
+useHead({ title: () => appName.value ? t("titles.consent", { app: appName.value }) : t("titles.consentGeneric") });
 </script>
 
 <template>

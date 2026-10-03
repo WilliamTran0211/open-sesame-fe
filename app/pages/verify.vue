@@ -115,6 +115,8 @@ onMounted(async () => {
 
   startCooldown();
 });
+
+useHead({ title: () => t("titles.verify") });
 </script>
 
 <template>

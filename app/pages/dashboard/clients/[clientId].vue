@@ -115,6 +115,8 @@ onMounted(async () => {
   const fresh = await clientsStore.fetchClient(clientId.value);
   loadFailed.value = !fresh && !client.value;
 });
+
+useHead({ title: () => client.value?.name || t("titles.clients") });
 </script>
 
 <template>

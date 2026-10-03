@@ -55,6 +55,8 @@ onMounted(() => {
     resetEmail.value = "";
   }
 });
+
+useHead({ title: () => t("titles.signIn") });
 </script>
 
 <template>

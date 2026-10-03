@@ -33,6 +33,8 @@ async function verify() {
     await navigateTo(redirect.value || "/dashboard");
   }
 }
+
+useHead({ title: () => t("titles.mfa") });
 </script>
 
 <template>

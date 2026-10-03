@@ -69,6 +69,8 @@ onMounted(() => {
   scopesStore.error = "";
   scopesStore.fetchScopes(true);
 });
+
+useHead({ title: () => t("titles.scopes") });
 </script>
 
 <template>

@@ -24,6 +24,8 @@ async function create(payload: OAuthClientPayload) {
 onMounted(() => {
   clientsStore.error = "";
 });
+
+useHead({ title: () => t("titles.newClient") });
 </script>
 
 <template>

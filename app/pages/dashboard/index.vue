@@ -50,6 +50,8 @@ const sections = computed(() => [
 onMounted(() => {
   clientsStore.fetchClients();
 });
+
+useHead({ title: () => t("titles.overview") });
 </script>
 
 <template>
