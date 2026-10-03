@@ -83,6 +83,7 @@
     "login": {
       "title": "Open the door!",
       "description": "Sign in to continue to your workspace.",
+      "expired": "Your session ended. Sign in again to pick up where you left off.",
       "passwordPlaceholder": "Enter your password",
       "forgot": "Forgot password?",
       "submit": "Continue",

@@ -42,15 +42,46 @@ export function getErrorStatus(error: unknown) {
   return (error as { response?: { status?: number } })?.response?.status;
 }
 
+// A 401 while signed in means the session ended (expired or revoked elsewhere):
+// forget the user and send them to sign in, then back to where they were.
+// Signed-out flows (a wrong password, say) also get 401s and handle those themselves.
+async function handleExpiredSession() {
+  const auth = useAuthStore();
+
+  if (!auth.user) {
+    return;
+  }
+
+  auth.user = null;
+  const route = useRouter().currentRoute.value;
+
+  if (route.path !== "/login") {
+    await navigateTo({
+      path: "/login",
+      query: { redirect: route.fullPath, expired: "1" },
+    });
+  }
+}
+
 // Every API call sends the session cookie, which lives on the API origin.
-export function apiFetch<T>(path: string, options: ApiRequestOptions = {}) {
+export async function apiFetch<T>(path: string, options: ApiRequestOptions = {}) {
+  const nuxtApp = useNuxtApp();
   const config = useRuntimeConfig();
 
-  return $fetch<T>(`${config.public.apiBaseUrl}${path}`, {
-    method: options.method ?? "GET",
-    body: options.body,
-    credentials: "include",
-  });
+  try {
+    return await $fetch<T>(`${config.public.apiBaseUrl}${path}`, {
+      method: options.method ?? "GET",
+      body: options.body,
+      credentials: "include",
+    });
+  } catch (requestError) {
+    if (getErrorStatus(requestError) === 401) {
+      // After an await the Nuxt context can be gone; restore it for the router and store.
+      await nuxtApp.runWithContext(handleExpiredSession);
+    }
+
+    throw requestError;
+  }
 }
 
 export function apiErrorMessage(

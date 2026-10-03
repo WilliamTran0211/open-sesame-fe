@@ -56,9 +56,8 @@ async function load() {
       (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at),
     );
   } catch (requestError) {
+    // apiFetch already sends an expired session to sign-in; don't flash an error meanwhile.
     if (getErrorStatus(requestError) === 401) {
-      auth.user = null;
-      await navigateTo("/login");
       return;
     }
 

@@ -13,6 +13,8 @@ const route = useRoute();
 const config = useRuntimeConfig();
 const justVerified = computed(() => route.query.verified === "1");
 const justReset = computed(() => route.query.reset === "1");
+// Set by apiFetch when a signed-in request came back 401.
+const sessionExpired = computed(() => route.query.expired === "1");
 const resetEmail = useState<string>("auth.resetEmail", () => "");
 // Set when sign-in was triggered by a protected page or an OAuth authorize request.
 const returnTo = computed(() =>
@@ -122,6 +124,14 @@ onMounted(() => {
           class="alert alert-success py-2 text-xs"
         >
           {{ t("auth.reset.done") }}
+        </div>
+
+        <div
+          v-else-if="sessionExpired"
+          role="status"
+          class="alert alert-warning py-2 text-xs"
+        >
+          {{ t("auth.login.expired") }}
         </div>
 
         <button

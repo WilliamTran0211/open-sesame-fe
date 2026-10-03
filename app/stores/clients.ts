@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import {
   apiFetch,
-  getErrorStatus,
   trackRequest,
   type ApiRequestOptions,
 } from "~/utils/api";
@@ -21,21 +20,9 @@ export const useClientsStore = defineStore("clients", () => {
   // detail page has shown it, then drop it.
   const revealedSecret = ref<RevealedSecret | null>(null);
 
-  async function request<T>(path: string, options: ApiRequestOptions = {}) {
-    try {
-      return await apiFetch<T>(`/clients${path}`, options);
-    } catch (requestError) {
-      // Client management is session-only; an expired session means signing in again.
-      if (getErrorStatus(requestError) === 401) {
-        useAuthStore().user = null;
-        await navigateTo({
-          path: "/login",
-          query: { redirect: useRoute().fullPath },
-        });
-      }
-
-      throw requestError;
-    }
+  // Expired sessions are handled once, in apiFetch.
+  function request<T>(path: string, options: ApiRequestOptions = {}) {
+    return apiFetch<T>(`/clients${path}`, options);
   }
 
   function upsert(client: OAuthClient) {
