@@ -90,7 +90,9 @@ export const useAuthStore = defineStore("auth", () => {
 
       user.value = null;
 
-      if (status !== 401 && status !== 403) {
+      // The API answers 404 when the session cookie points at a session it no
+      // longer has; for /users/me that just means "signed out", not an error.
+      if (status !== 401 && status !== 403 && status !== 404) {
         error.value = apiErrorMessage(requestError, "auth.errors.profile");
       }
 
