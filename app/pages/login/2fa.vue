@@ -21,6 +21,7 @@ const METHOD_ICONS = { totp: Smartphone, email: Mail, recovery: KeyRound };
 const RECOVERY_CODE_PATTERN = /^[A-Za-z0-9_-]{10}$/;
 
 const auth = useAuthStore();
+const afterSignIn = useAfterSignIn();
 const route = useRoute();
 const config = useRuntimeConfig();
 const { t } = useI18n();
@@ -66,7 +67,7 @@ async function verify() {
   }
 
   if (await auth.verifyMfaLogin(code.value)) {
-    await navigateTo(redirect.value || "/dashboard");
+    await afterSignIn(redirect.value);
   }
 }
 

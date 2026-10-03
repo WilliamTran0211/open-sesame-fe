@@ -5,6 +5,7 @@ import {
   isValidRedirectUri,
   parseAuthorizeRequest,
   resolveLoginRedirect,
+  signInDestination,
 } from "~/utils/oauth";
 
 const API = "https://localhost:8000/api/v1";
@@ -52,6 +53,26 @@ describe("resolveLoginRedirect", () => {
     expect(
       resolveLoginRedirect({ redirect_uri: "https://evil.example/api/v1/oauth/authorize" }, API),
     ).toBeNull();
+  });
+});
+
+describe("signInDestination", () => {
+  it("sends a consent request back through the API, which skips approved apps", () => {
+    expect(signInDestination("/oauth/authorize?client_id=app&state=xyz", API)).toEqual({
+      url: `${API}/oauth/authorize?client_id=app&state=xyz`,
+      external: true,
+    });
+  });
+
+  it("keeps other in-app paths in the app", () => {
+    expect(signInDestination("/dashboard/profile", API)).toEqual({
+      url: "/dashboard/profile",
+      external: false,
+    });
+  });
+
+  it("never turns an off-site path into an external navigation", () => {
+    expect(signInDestination("//evil.example/oauth/authorize", API).external).toBe(false);
   });
 });
 

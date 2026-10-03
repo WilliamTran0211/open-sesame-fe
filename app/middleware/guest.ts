@@ -12,8 +12,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // Guests see the landing page at "/"; signed-in users go straight to their workspace.
   if (isAuthenticated && (to.path === "/" || to.path === "/login")) {
     const config = useRuntimeConfig();
-    return navigateTo(
-      resolveLoginRedirect(to.query, config.public.apiBaseUrl) || "/dashboard",
-    );
+    return useAfterSignIn()(resolveLoginRedirect(to.query, config.public.apiBaseUrl));
   }
 });

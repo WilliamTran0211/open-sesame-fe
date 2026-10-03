@@ -8,6 +8,7 @@ import { isValidEmail } from "~/utils/email";
 import { resolveLoginRedirect } from "~/utils/oauth";
 
 const auth = useAuthStore();
+const afterSignIn = useAfterSignIn();
 const { t } = useI18n();
 const route = useRoute();
 const config = useRuntimeConfig();
@@ -31,7 +32,7 @@ async function signIn() {
   const result = await auth.signIn(email.value, password.value);
 
   if (result === "success") {
-    await navigateTo(returnTo.value || "/dashboard");
+    await afterSignIn(returnTo.value);
   } else if (result === "mfa_required") {
     await navigateTo({
       path: "/login/2fa",

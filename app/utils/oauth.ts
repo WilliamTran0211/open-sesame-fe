@@ -225,7 +225,9 @@ export function isInternalPath(path: string) {
  * Where to send the user after signing in.
  * - `redirect`: an in-app path (set by the auth middleware).
  * - `redirect_uri`: the API's authorize URL, sent by the API when there is no session.
- *   It's rewritten to the consent page so the user approves scopes first.
+ *   It's rewritten to the consent page path, so it can travel between the sign-in,
+ *   register and verify pages as an in-app `redirect`. signInDestination turns it back
+ *   into the API URL for the final step.
  */
 export function resolveLoginRedirect(query: LocationQuery, apiBaseUrl: string) {
   const redirect = firstValue(query.redirect);
@@ -255,4 +257,22 @@ export function resolveLoginRedirect(query: LocationQuery, apiBaseUrl: string) {
   }
 
   return null;
+}
+
+/**
+ * What to open once someone is signed in, given an in-app path from
+ * resolveLoginRedirect. A consent request goes back through the API's authorize
+ * endpoint instead of straight to the consent page: the API issues the code at once
+ * for an app the user already approved, and sends them to the consent page otherwise.
+ */
+export function signInDestination(target: string, apiBaseUrl: string) {
+  if (isInternalPath(target)) {
+    const url = new URL(target, INTERNAL_ORIGIN);
+
+    if (url.pathname === CONSENT_PATH) {
+      return { url: `${apiBaseUrl}/oauth/authorize${url.search}`, external: true };
+    }
+  }
+
+  return { url: target, external: false };
 }

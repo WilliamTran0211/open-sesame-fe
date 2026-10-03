@@ -17,6 +17,7 @@ import { resolveLoginRedirect } from "~/utils/oauth";
 const RESEND_COOLDOWN_SECONDS = 60;
 
 const auth = useAuthStore();
+const afterSignIn = useAfterSignIn();
 const { t } = useI18n();
 const route = useRoute();
 const fromSignIn = ref(false);
@@ -45,7 +46,7 @@ async function verify() {
     // Re-verifying a changed email: the session is still valid, so skip sign-in.
     auth.clearPendingEmail();
     await auth.fetchMe();
-    await navigateTo(returnTo.value || "/dashboard");
+    await afterSignIn(returnTo.value);
   } else if (success) {
     await navigateTo({
       path: "/login",
