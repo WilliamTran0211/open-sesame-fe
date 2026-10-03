@@ -5,8 +5,9 @@ definePageMeta({
 });
 
 import { ArrowRight } from "lucide";
+import { oauthApi } from "~/services/oauth";
+import { apiErrorMessage, getErrorStatus } from "~/utils/api";
 import {
-  buildAuthorizeUrl,
   buildDeniedUrl,
   getUrlHost,
   isRegisteredRedirect,
@@ -17,7 +18,6 @@ type ConsentState = "ready" | "redirecting" | "cancelled";
 
 const auth = useAuthStore();
 const route = useRoute();
-const config = useRuntimeConfig();
 const { t } = useI18n();
 const { client, isLoading: isClientLoading, load: loadClient } = useOAuthClient();
 
@@ -26,6 +26,7 @@ const scopesStore = useScopesStore();
 const parsed = computed(() => parseAuthorizeRequest(route.query));
 const request = computed(() => parsed.value.request);
 const consentState = ref<ConsentState>("ready");
+const consentError = ref("");
 const appName = computed(
   () => client.value?.name || request.value?.clientId || "",
 );
@@ -43,13 +44,47 @@ const scopesNarrowed = computed(
 );
 const clientInactive = computed(() => client.value?.is_active === false);
 
-function allow() {
-  if (!request.value) {
+// The API appends ?code=...&state=... (or &code=... when the URI has a query) to
+// the redirect URI it validated. Check that anyway, so Allow can only ever send the
+// browser back to the app that asked.
+function isRedirectFor(redirectTo: string, redirectUri: string) {
+  return (
+    redirectTo.startsWith(redirectUri) &&
+    /^[?&]/.test(redirectTo.slice(redirectUri.length))
+  );
+}
+
+async function allow() {
+  if (!request.value || consentState.value === "redirecting") {
     return;
   }
 
+  consentError.value = "";
   consentState.value = "redirecting";
-  window.location.assign(buildAuthorizeUrl(config.public.apiBaseUrl, request.value));
+
+  let redirectTo: string;
+  try {
+    ({ redirect_to: redirectTo } = await oauthApi.consent(request.value));
+  } catch (requestError) {
+    // The API also answers 404 when the session behind the cookie is gone. Check the
+    // session before blaming the app, and send people to sign in if that's the cause.
+    if (getErrorStatus(requestError) === 404 && !(await auth.fetchMe())) {
+      await navigateTo({ path: "/login", query: { redirect: route.fullPath } });
+      return;
+    }
+
+    consentState.value = "ready";
+    consentError.value = apiErrorMessage(requestError, "oauth.errors.allow");
+    return;
+  }
+
+  if (!isRedirectFor(redirectTo, request.value.redirectUri)) {
+    consentState.value = "ready";
+    consentError.value = t("oauth.errors.allow");
+    return;
+  }
+
+  window.location.assign(redirectTo);
 }
 
 function deny() {
@@ -144,6 +179,10 @@ useHead({ title: () => appName.value ? t("titles.consent", { app: appName.value 
 
       <AlertMessage v-if="clientInactive">
         {{ t("oauth.client.inactive") }}
+      </AlertMessage>
+
+      <AlertMessage v-if="consentError">
+        {{ consentError }}
       </AlertMessage>
 
       <p class="oauth-fine-print">

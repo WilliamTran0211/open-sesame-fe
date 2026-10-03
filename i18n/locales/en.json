@@ -231,6 +231,9 @@
     "allow": "Allow",
     "deny": "Deny",
     "finePrint": "Allowing sends you to {host}. {app} will use this access under its own terms; you can revoke it at any time.",
+    "errors": {
+      "allow": "Couldn't approve this request. Try again."
+    },
     "backToDashboard": "Back to dashboard",
     "client": {
       "redirectsTo": "Redirects to",

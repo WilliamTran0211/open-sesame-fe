@@ -188,18 +188,6 @@ function appendQuery(url: string, params: Record<string, string | undefined>) {
 }
 
 // The API issues the code once the browser (carrying the session cookie) hits this URL.
-export function buildAuthorizeUrl(apiBaseUrl: string, request: AuthorizeRequest) {
-  return appendQuery(`${apiBaseUrl}/oauth/authorize`, {
-    response_type: request.responseType,
-    client_id: request.clientId,
-    redirect_uri: request.redirectUri,
-    scope: request.scope,
-    state: request.state,
-    code_challenge: request.codeChallenge,
-    code_challenge_method: request.codeChallengeMethod,
-  });
-}
-
 // RFC 6749 §4.1.2.1 — tell the client the user said no.
 export function buildDeniedUrl(request: AuthorizeRequest) {
   return appendQuery(request.redirectUri, {
