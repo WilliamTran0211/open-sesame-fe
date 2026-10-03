@@ -32,12 +32,16 @@ export default defineNuxtConfig({
     "/**": {
       headers: {
         // No page may be framed: an embedded consent screen could be clickjacked into "Allow".
-        "Content-Security-Policy": "frame-ancestors 'none'",
+        // No plugins, no <base> hijacking, and forms may only post back to this site.
+        "Content-Security-Policy":
+          "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
         "X-Frame-Options": "DENY",
         // Authorize URLs carry state and PKCE values; don't leak them to other sites.
         "Referrer-Policy": "no-referrer",
         "X-Content-Type-Options": "nosniff",
         "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+        // Pages this app opens can't script it back through window.opener.
+        "Cross-Origin-Opener-Policy": "same-origin",
         // HSTS belongs on the production proxy; on localhost it would pin every local app to https.
       },
     },
