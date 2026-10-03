@@ -157,16 +157,12 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div v-if="notice" role="status" class="alert alert-success mb-4 py-2 text-sm">
+      <AlertMessage v-if="notice" tone="success" class="mb-4">
         {{ notice }}
-      </div>
-      <div
-        v-if="clientsStore.error && !isEditing"
-        role="alert"
-        class="alert alert-error mb-4 py-2 text-sm"
-      >
+      </AlertMessage>
+      <AlertMessage v-if="clientsStore.error && !isEditing" class="mb-4">
         {{ clientsStore.error }}
-      </div>
+      </AlertMessage>
 
       <SecretReveal v-if="secret" :secret="secret" @dismiss="secret = null" />
 

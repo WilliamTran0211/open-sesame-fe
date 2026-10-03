@@ -142,13 +142,9 @@ onMounted(() => {
           </p>
         </div>
 
-        <div
-          v-if="clientInactive"
-          role="alert"
-          class="alert alert-error py-2 text-xs"
-        >
+        <AlertMessage v-if="clientInactive">
           {{ t("oauth.client.inactive") }}
-        </div>
+        </AlertMessage>
 
         <p class="oauth-fine-print">
           {{

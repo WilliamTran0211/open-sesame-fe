@@ -46,6 +46,10 @@ async function verify() {
       :loading="auth.isLoading"
     >
       <form class="auth-form" @submit.prevent="verify">
+        <AlertMessage v-if="auth.error">
+          {{ auth.error }}
+        </AlertMessage>
+
         <FormField
           v-model="code"
           id="mfa-code"
@@ -55,14 +59,6 @@ async function verify() {
           :error="submitted && !code.trim()"
           :error-message="t('auth.errors.mfaCodeRequired')"
         />
-
-        <div
-          v-if="auth.error"
-          role="alert"
-          class="alert alert-error py-2 text-xs"
-        >
-          {{ auth.error }}
-        </div>
 
         <button
           type="submit"

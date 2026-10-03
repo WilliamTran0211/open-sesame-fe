@@ -71,7 +71,7 @@ function rowError(value: string) {
           :aria-label="t('clients.form.redirectUri', { index: index + 1 })"
           @input="update(index, ($event.target as HTMLInputElement).value)"
         />
-        <p v-if="rowError(uri)" class="dash-field-error">{{ rowError(uri) }}</p>
+        <AlertMessage v-if="rowError(uri)" compact>{{ rowError(uri) }}</AlertMessage>
       </div>
       <button
         type="button"

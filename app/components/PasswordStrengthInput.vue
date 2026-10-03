@@ -131,6 +131,5 @@ function hideStrength() {
         </ul>
       </div>
     </div>
-    <p class="field-error" :class="{ 'field-error-visible': error }" />
   </div>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PhEye, PhEyeSlash } from "@phosphor-icons/vue";
+import { PhEye, PhEyeSlash, PhWarningCircle } from "@phosphor-icons/vue";
 
 type InputType = "email" | "password" | "text";
 
@@ -77,12 +77,8 @@ const inputType = computed(() => {
         <PhEye v-else :size="17" aria-hidden="true" />
       </button>
     </label>
-    <p
-      :id="errorId"
-      class="field-error"
-      :class="{ 'field-error-visible': error && errorMessage }"
-      :aria-hidden="!(error && errorMessage)"
-    >
+    <p v-if="error && errorMessage" :id="errorId" class="field-error">
+      <PhWarningCircle :size="14" weight="bold" aria-hidden="true" />
       {{ errorMessage }}
     </p>
   </div>

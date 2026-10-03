@@ -19,12 +19,14 @@ onMounted(() => scopesStore.fetchScopes());
       <span v-for="row in 3" :key="row" class="skeleton h-9 w-full" aria-hidden="true" />
     </div>
 
-    <div v-else-if="scopesStore.error" role="alert" class="alert alert-error py-2 text-xs">
+    <AlertMessage v-else-if="scopesStore.error" compact>
       {{ scopesStore.error }}
-      <button type="button" class="btn btn-ghost btn-xs" @click="scopesStore.fetchScopes(true)">
-        {{ t("clients.retry") }}
-      </button>
-    </div>
+      <template #action>
+        <button type="button" class="btn btn-ghost btn-xs" @click="scopesStore.fetchScopes(true)">
+          {{ t("clients.reload") }}
+        </button>
+      </template>
+    </AlertMessage>
 
     <template v-else>
       <p v-if="!scopesStore.scopes.length && !staleScopes.length" class="dash-field-hint">

@@ -104,12 +104,14 @@ onMounted(load);
       </li>
     </ul>
 
-    <div v-else-if="loadError" role="alert" class="alert alert-error py-2 text-xs">
-      <span>{{ loadError }}</span>
-      <button type="button" class="btn btn-sm" @click="load">
-        {{ t("clients.retry") }}
-      </button>
-    </div>
+    <AlertMessage v-else-if="loadError">
+      {{ loadError }}
+      <template #action>
+        <button type="button" class="btn btn-ghost btn-sm" @click="load">
+          {{ t("clients.reload") }}
+        </button>
+      </template>
+    </AlertMessage>
 
     <ul v-else class="session-list">
       <li v-for="session in sessions" :key="session.session_id" class="session-row">
@@ -132,9 +134,9 @@ onMounted(load);
       </li>
     </ul>
 
-    <div v-if="revokeError" role="alert" class="alert alert-error py-2 text-xs">
+    <AlertMessage v-if="revokeError">
       {{ revokeError }}
-    </div>
+    </AlertMessage>
 
     <div class="dash-danger-row session-revoke">
       <div>

@@ -343,16 +343,14 @@ watch(
         </span>
       </div>
 
-      <div
-        v-if="!isVerified"
-        role="alert"
-        class="alert alert-warning py-2 text-sm"
-      >
-        <span>{{ t("profile.account.unverifiedHint") }}</span>
-        <button type="button" class="btn btn-sm" @click="verifyCurrentEmail">
-          {{ t("profile.account.verifyNow") }}
-        </button>
-      </div>
+      <AlertMessage v-if="!isVerified" tone="warning">
+        {{ t("profile.account.unverifiedHint") }}
+        <template #action>
+          <button type="button" class="btn btn-sm" @click="verifyCurrentEmail">
+            {{ t("profile.account.verifyNow") }}
+          </button>
+        </template>
+      </AlertMessage>
 
       <form class="dash-form" novalidate @submit.prevent="submitProfile">
         <FormField
@@ -376,20 +374,12 @@ watch(
           {{ t("profile.account.emailChangeHint") }}
         </p>
 
-        <div
-          v-if="profileError"
-          role="alert"
-          class="alert alert-error py-2 text-xs"
-        >
+        <AlertMessage v-if="profileError">
           {{ profileError }}
-        </div>
-        <div
-          v-else-if="profileNotice"
-          role="status"
-          class="alert alert-success py-2 text-xs"
-        >
+        </AlertMessage>
+        <AlertMessage v-else-if="profileNotice" tone="success">
           {{ profileNotice }}
-        </div>
+        </AlertMessage>
 
         <div class="dash-form-actions">
           <button
@@ -439,9 +429,9 @@ watch(
             :full-name="fullName"
             :error="!!newPasswordError"
           />
-          <p v-if="newPasswordError" class="dash-field-error">
+          <AlertMessage v-if="newPasswordError" compact>
             {{ newPasswordError }}
-          </p>
+          </AlertMessage>
         </div>
         <FormField
           v-model="confirmPassword"
@@ -455,20 +445,12 @@ watch(
           show-password-toggle
         />
 
-        <div
-          v-if="passwordError"
-          role="alert"
-          class="alert alert-error py-2 text-xs"
-        >
+        <AlertMessage v-if="passwordError">
           {{ passwordError }}
-        </div>
-        <div
-          v-else-if="passwordNotice"
-          role="status"
-          class="alert alert-success py-2 text-xs"
-        >
+        </AlertMessage>
+        <AlertMessage v-else-if="passwordNotice" tone="success">
           {{ passwordNotice }}
-        </div>
+        </AlertMessage>
 
         <div class="dash-form-actions">
           <button
@@ -651,20 +633,12 @@ watch(
         </div>
       </form>
 
-      <div
-        v-if="mfaError"
-        role="alert"
-        class="alert alert-error mt-4 py-2 text-xs"
-      >
+      <AlertMessage v-if="mfaError" class="mt-4">
         {{ mfaError }}
-      </div>
-      <div
-        v-else-if="mfaNotice"
-        role="status"
-        class="alert alert-success mt-4 py-2 text-xs"
-      >
+      </AlertMessage>
+      <AlertMessage v-else-if="mfaNotice" tone="success" class="mt-4">
         {{ mfaNotice }}
-      </div>
+      </AlertMessage>
     </section>
 
     <ActiveSessions />

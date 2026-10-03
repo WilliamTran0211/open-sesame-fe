@@ -137,9 +137,9 @@ function submit() {
         maxlength="255"
         autocomplete="off"
       />
-      <p v-if="submitted && errors.name" class="dash-field-error">
+      <AlertMessage v-if="submitted && errors.name" compact>
         {{ errors.name }}
-      </p>
+      </AlertMessage>
     </div>
 
     <fieldset class="dash-field">
@@ -174,9 +174,9 @@ function submit() {
       <span class="dash-label">{{ t("clients.form.redirects") }}</span>
       <p class="dash-field-hint">{{ t("clients.form.redirectsHint") }}</p>
       <RedirectUriList v-model="redirectUris" :show-errors="submitted" />
-      <p v-if="submitted && errors.redirects" class="dash-field-error">
+      <AlertMessage v-if="submitted && errors.redirects" compact>
         {{ errors.redirects }}
-      </p>
+      </AlertMessage>
     </div>
 
     <fieldset class="dash-field">
@@ -199,9 +199,9 @@ function submit() {
           <small>{{ t(`clients.grants.${grant}`) }}</small>
         </span>
       </label>
-      <p v-if="submitted && errors.grants" class="dash-field-error">
+      <AlertMessage v-if="submitted && errors.grants" compact>
         {{ errors.grants }}
-      </p>
+      </AlertMessage>
     </fieldset>
 
     <div class="dash-field">
@@ -241,9 +241,9 @@ function submit() {
             :class="{ 'input-error': submitted && errors.accessTtl }"
             :placeholder="t('clients.form.ttlPlaceholder')"
           />
-          <p v-if="submitted && errors.accessTtl" class="dash-field-error">
+          <AlertMessage v-if="submitted && errors.accessTtl" compact>
             {{ errors.accessTtl }}
-          </p>
+          </AlertMessage>
         </div>
         <div class="dash-field">
           <label for="refresh-ttl">{{ t("clients.form.refreshTtl") }}</label>
@@ -258,9 +258,9 @@ function submit() {
             :class="{ 'input-error': submitted && errors.refreshTtl }"
             :placeholder="t('clients.form.ttlPlaceholder')"
           />
-          <p v-if="submitted && errors.refreshTtl" class="dash-field-error">
+          <AlertMessage v-if="submitted && errors.refreshTtl" compact>
             {{ errors.refreshTtl }}
-          </p>
+          </AlertMessage>
         </div>
       </div>
       <p class="dash-field-hint">
@@ -268,9 +268,9 @@ function submit() {
       </p>
     </details>
 
-    <div v-if="error" role="alert" class="alert alert-error py-2 text-xs">
+    <AlertMessage v-if="error">
       {{ error }}
-    </div>
+    </AlertMessage>
 
     <div class="dash-form-actions">
       <button

@@ -145,6 +145,14 @@ onBeforeUnmount(() => {
       :loading="auth.isLoading"
     >
       <form class="auth-form" @submit.prevent="verify">
+        <AlertMessage v-if="auth.error">
+          {{ auth.error }}
+        </AlertMessage>
+
+        <AlertMessage v-else-if="resent" tone="success">
+          {{ fromSignIn ? t("auth.verify.notVerified") : t("auth.verify.resent") }}
+        </AlertMessage>
+
         <OtpInput
           v-model="otp"
           id="otp"
@@ -152,22 +160,6 @@ onBeforeUnmount(() => {
           :error="otpError"
           :error-message="t('auth.verify.codeError')"
         />
-
-        <div
-          v-if="auth.error"
-          role="alert"
-          class="alert alert-error py-2 text-xs"
-        >
-          {{ auth.error }}
-        </div>
-
-        <div
-          v-else-if="resent"
-          role="status"
-          class="alert alert-success py-2 text-xs"
-        >
-          {{ fromSignIn ? t("auth.verify.notVerified") : t("auth.verify.resent") }}
-        </div>
 
         <button
           type="submit"

@@ -198,24 +198,80 @@ body {
   border-color: var(--color-error);
 }
 
-.field-error {
-  height: 16px;
-  min-height: 16px;
-  overflow: hidden;
-  margin: -2px 0 0;
-  color: var(--color-error);
-  font-size: 11px;
-  line-height: 1.4;
-  opacity: 0;
-  transform: translateY(-6px);
-  transition: opacity 180ms ease, transform 220ms ease;
+
+/* Messages: one calm style for errors, warnings and confirmations.
+   The tint carries the tone; text keeps the body color so it stays easy to read,
+   and the icon uses the tone mixed toward the text color so it holds 3:1. */
+.alert-message {
+  --tone: var(--color-error);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--tone) 35%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--tone) 10%, var(--color-base-100));
+  color: var(--color-base-content);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-.field-error-visible {
-  opacity: 1;
-  transform: translateY(0);
-  animation: auth-slide-down 220ms ease-out;
+.alert-message.is-warning { --tone: var(--color-warning); }
+.alert-message.is-success { --tone: var(--color-success); }
+.alert-message.is-info { --tone: var(--color-info); }
+
+.alert-message-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: color-mix(in srgb, var(--tone) 65%, var(--color-base-content));
 }
+
+.alert-message-body {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.alert-message-action {
+  flex-shrink: 0;
+  margin: -4px -4px -4px 0;
+}
+
+.alert-message.is-compact {
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+/* Field errors: shown only when there is one, right under the input. */
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: color-mix(in srgb, var(--color-error) 65%, var(--color-base-content));
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.field-error svg {
+  flex-shrink: 0;
+}
+
+/* In the dashboard every message is an alert, field errors included. */
+.dash-card .field-error {
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--color-error) 35%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-error) 10%, var(--color-base-100));
+  color: var(--color-base-content);
+}
+
+.dash-card .field-error svg {
+  color: color-mix(in srgb, var(--color-error) 65%, var(--color-base-content));
+}
+
+
 
 .password-input-wrap {
   position: relative;
@@ -299,14 +355,7 @@ body {
 .requirement-state.is-met { color: var(--color-success); }
 .requirement-state.is-unmet { color: color-mix(in srgb, var(--color-base-content) 42%, transparent); }
 
-.password-strength-field > .field-error {
-  margin-top: 0;
-}
 
-@keyframes auth-slide-down {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 
 
 .password-toggle {
@@ -1116,6 +1165,12 @@ body {
   margin-bottom: 32px;
 }
 
+.dash-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 /* The header owns the spacing so its action lines up with the intro text. */
 .dash-page-header .dashboard-intro {
   margin-bottom: 0;
@@ -1297,12 +1352,6 @@ body {
   opacity: 0.72;
   font-size: 12px;
   line-height: 1.5;
-}
-
-.dash-field-error {
-  margin: 2px 0 0;
-  color: var(--color-error);
-  font-size: 11px;
 }
 
 .client-type-options {
@@ -1569,12 +1618,6 @@ body {
 .dash-card .input-ghost:focus-within {
   border-color: var(--color-primary-ink);
   outline: none;
-}
-
-/* Dashboard forms already space their fields; don't reserve a blank error line too. */
-.dash-card .field-error:not(.field-error-visible) {
-  height: 0;
-  min-height: 0;
 }
 
 /* No room beside the card: open the strength checklist below the input. */

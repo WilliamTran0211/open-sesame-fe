@@ -67,6 +67,22 @@ onMounted(() => {
       :description="t('auth.login.description')"
     >
       <form class="auth-form" @submit.prevent="signIn">
+        <AlertMessage v-if="auth.error">
+          {{ auth.error }}
+        </AlertMessage>
+
+        <AlertMessage v-else-if="justVerified" tone="success">
+          {{ t("auth.verify.verified") }}
+        </AlertMessage>
+
+        <AlertMessage v-else-if="justReset" tone="success">
+          {{ t("auth.reset.done") }}
+        </AlertMessage>
+
+        <AlertMessage v-else-if="sessionExpired" tone="warning">
+          {{ t("auth.login.expired") }}
+        </AlertMessage>
+
         <FormField
           v-model="email"
           id="email"
@@ -101,38 +117,6 @@ onMounted(() => {
             >
           </template>
         </FormField>
-
-        <div
-          v-if="auth.error"
-          role="alert"
-          class="alert alert-error py-2 text-xs"
-        >
-          {{ auth.error }}
-        </div>
-
-        <div
-          v-else-if="justVerified"
-          role="status"
-          class="alert alert-success py-2 text-xs"
-        >
-          {{ t("auth.verify.verified") }}
-        </div>
-
-        <div
-          v-else-if="justReset"
-          role="status"
-          class="alert alert-success py-2 text-xs"
-        >
-          {{ t("auth.reset.done") }}
-        </div>
-
-        <div
-          v-else-if="sessionExpired"
-          role="status"
-          class="alert alert-warning py-2 text-xs"
-        >
-          {{ t("auth.login.expired") }}
-        </div>
 
         <button
           type="submit"

@@ -156,6 +156,10 @@ onBeforeUnmount(() => {
       :loading="isLoading"
     >
       <form class="auth-form" novalidate @submit.prevent="submitRequest">
+        <AlertMessage v-if="error">
+          {{ error }}
+        </AlertMessage>
+
         <FormField
           v-model="email"
           id="email"
@@ -166,10 +170,6 @@ onBeforeUnmount(() => {
           :error="emailError"
           :error-message="t('auth.errors.invalidEmail')"
         />
-
-        <div v-if="error" role="alert" class="alert alert-error py-2 text-xs">
-          {{ error }}
-        </div>
 
         <button
           type="submit"
@@ -197,6 +197,16 @@ onBeforeUnmount(() => {
       :loading="isLoading"
     >
       <form class="auth-form" novalidate @submit.prevent="submitConfirm">
+        <AlertMessage v-if="error">
+          {{ error }}
+        </AlertMessage>
+        <AlertMessage v-else-if="newPasswordError">
+          {{ t("auth.errors.weakPassword") }}
+        </AlertMessage>
+        <AlertMessage v-else-if="resent" tone="success">
+          {{ t("auth.verify.resent") }}
+        </AlertMessage>
+
         <!-- Lets password managers pair the new password with this account. -->
         <input
           type="text"
@@ -231,24 +241,6 @@ onBeforeUnmount(() => {
           :error-message="t('auth.errors.passwordMismatch')"
           show-password-toggle
         />
-
-        <div v-if="error" role="alert" class="alert alert-error py-2 text-xs">
-          {{ error }}
-        </div>
-        <div
-          v-else-if="newPasswordError"
-          role="alert"
-          class="alert alert-error py-2 text-xs"
-        >
-          {{ t("auth.errors.weakPassword") }}
-        </div>
-        <div
-          v-else-if="resent"
-          role="status"
-          class="alert alert-success py-2 text-xs"
-        >
-          {{ t("auth.verify.resent") }}
-        </div>
 
         <button
           type="submit"

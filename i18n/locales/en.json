@@ -308,7 +308,7 @@
     "description": "Apps registered here can ask users to sign in with Open Sesame.",
     "new": "New client",
     "search": "Search by name or client ID",
-    "retry": "Retry",
+    "reload": "Reload",
     "noMatch": "No clients match your filters.",
     "back": "All clients",
     "notFound": "Client not found.",

@@ -3,7 +3,7 @@ definePageMeta({
   middleware: ["auth"],
 });
 
-import { PhCaretRight, PhPlus } from "@phosphor-icons/vue";
+import { PhArrowClockwise, PhCaretRight, PhPlus } from "@phosphor-icons/vue";
 
 type StatusFilter = "all" | "active" | "inactive";
 
@@ -45,10 +45,22 @@ onMounted(() => {
         <h1>{{ t("clients.title") }}</h1>
         <p>{{ t("clients.description") }}</p>
       </div>
-      <NuxtLink to="/dashboard/clients/new" class="btn btn-primary">
-        <PhPlus :size="16" weight="bold" aria-hidden="true" />
-        {{ t("clients.new") }}
-      </NuxtLink>
+      <div class="dash-page-actions">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          :disabled="clientsStore.isLoading"
+          @click="clientsStore.fetchClients()"
+        >
+          <span v-if="clientsStore.isLoading" class="loading loading-spinner loading-xs" />
+          <PhArrowClockwise v-else :size="16" weight="bold" aria-hidden="true" />
+          {{ t("clients.reload") }}
+        </button>
+        <NuxtLink to="/dashboard/clients/new" class="btn btn-primary">
+          <PhPlus :size="16" weight="bold" aria-hidden="true" />
+          {{ t("clients.new") }}
+        </NuxtLink>
+      </div>
     </div>
 
     <div class="dash-toolbar">
@@ -76,15 +88,13 @@ onMounted(() => {
       />
     </div>
 
-    <div v-if="clientsStore.error" role="alert" class="alert alert-error text-sm">
-      <span>{{ clientsStore.error }}</span>
-      <button type="button" class="btn btn-sm" @click="clientsStore.fetchClients()">
-        {{ t("clients.retry") }}
-      </button>
-    </div>
+    <!-- A failed load still shows the (empty) list; Reload above tries again. -->
+    <AlertMessage v-if="clientsStore.error" class="mb-4">
+      {{ clientsStore.error }}
+    </AlertMessage>
 
     <ul
-      v-else-if="clientsStore.isLoading && !clientsStore.clients.length"
+      v-if="clientsStore.isLoading && !clientsStore.clients.length"
       class="client-list"
       :aria-label="t('common.loading')"
     >

@@ -61,6 +61,10 @@ async function register() {
       :loading="auth.isLoading"
     >
       <form class="auth-form" @submit.prevent="register">
+        <AlertMessage v-if="auth.error">
+          {{ auth.error }}
+        </AlertMessage>
+
         <FormField
           v-model="fullName"
           id="full-name"
@@ -102,14 +106,6 @@ async function register() {
           :error-message="t('auth.errors.passwordMismatch')"
           show-password-toggle
         />
-
-        <div
-          v-if="auth.error"
-          role="alert"
-          class="alert alert-error py-2 text-xs"
-        >
-          {{ auth.error }}
-        </div>
 
         <button
           type="submit"

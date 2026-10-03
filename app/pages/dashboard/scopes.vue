@@ -94,7 +94,7 @@ onMounted(() => {
             maxlength="100"
             autocomplete="off"
           />
-          <p v-if="submitted && errors.name" class="dash-field-error">{{ errors.name }}</p>
+          <AlertMessage v-if="submitted && errors.name" compact>{{ errors.name }}</AlertMessage>
         </div>
         <div class="dash-field">
           <label for="scope-description">{{ t("scopes.descriptionLabel") }}</label>
@@ -107,9 +107,9 @@ onMounted(() => {
             :placeholder="t('scopes.descriptionPlaceholder')"
             autocomplete="off"
           />
-          <p v-if="submitted && errors.description" class="dash-field-error">
+          <AlertMessage v-if="submitted && errors.description" compact>
             {{ errors.description }}
-          </p>
+          </AlertMessage>
         </div>
         <div class="dash-form-actions">
           <button type="submit" class="btn btn-primary" :disabled="scopesStore.isSaving">
@@ -120,9 +120,9 @@ onMounted(() => {
       </form>
     </section>
 
-    <div v-if="scopesStore.error" role="alert" class="alert alert-error mb-4 py-2 text-sm">
+    <AlertMessage v-if="scopesStore.error" class="mb-4">
       {{ scopesStore.error }}
-    </div>
+    </AlertMessage>
 
     <ul
       v-if="scopesStore.isLoading && !scopesStore.scopes.length"

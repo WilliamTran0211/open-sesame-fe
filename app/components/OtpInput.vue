@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { PhWarningCircle } from "@phosphor-icons/vue";
+
 const props = withDefaults(
   defineProps<{
     id: string;
@@ -44,12 +46,8 @@ function updateCode(event: Event) {
       :placeholder="'0'.repeat(length)"
       @input="updateCode"
     />
-    <p
-      :id="`${id}-error`"
-      class="field-error"
-      :class="{ 'field-error-visible': error }"
-      :aria-hidden="!error"
-    >
+    <p v-if="error && errorMessage" :id="`${id}-error`" class="field-error">
+      <PhWarningCircle :size="14" weight="bold" aria-hidden="true" />
       {{ errorMessage }}
     </p>
   </div>
