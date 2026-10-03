@@ -27,6 +27,18 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css"],
   // Auth is only known in the browser, so don't server-render protected pages.
   routeRules: {
+    "/**": {
+      headers: {
+        // No page may be framed: an embedded consent screen could be clickjacked into "Allow".
+        "Content-Security-Policy": "frame-ancestors 'none'",
+        "X-Frame-Options": "DENY",
+        // Authorize URLs carry state and PKCE values; don't leak them to other sites.
+        "Referrer-Policy": "no-referrer",
+        "X-Content-Type-Options": "nosniff",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+        // HSTS belongs on the production proxy; on localhost it would pin every local app to https.
+      },
+    },
     "/dashboard": { ssr: false },
     "/dashboard/**": { ssr: false },
     "/success": { ssr: false },
