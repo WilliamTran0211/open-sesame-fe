@@ -216,9 +216,21 @@ export function isRegisteredRedirect(
   return !!client?.redirect_uris.includes(redirectUri);
 }
 
-function isInternalPath(path: string) {
-  // "//host" and "/\host" are protocol-relative URLs to browsers, i.e. off-site.
-  return path.startsWith("/") && !/^\/[/\\]/.test(path);
+const INTERNAL_ORIGIN = "https://open-sesame.invalid";
+
+// True only for a path on this site. Browsers read "//host" and "/\host" as other
+// sites and silently drop tabs and newlines ("/\t/host" becomes "//host"), so the
+// path is resolved the way a browser would and must keep our origin.
+export function isInternalPath(path: string) {
+  if (!path.startsWith("/") || /[\\\u0000-\u001f\u007f]/.test(path)) {
+    return false;
+  }
+
+  try {
+    return new URL(path, INTERNAL_ORIGIN).origin === INTERNAL_ORIGIN;
+  } catch {
+    return false;
+  }
 }
 
 /**
