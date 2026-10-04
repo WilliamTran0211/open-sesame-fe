@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { LockKeyhole } from "lucide";
-import { getUrlHost, type OAuthClientInfo } from "~/utils/oauth";
+import { getRedirectLabel, type OAuthClientInfo } from "~/utils/oauth";
 
 const props = defineProps<{
   clientId: string;
@@ -12,7 +12,7 @@ const props = defineProps<{
 const { t } = useI18n();
 const appName = computed(() => props.client?.name || props.clientId);
 const monogram = computed(() => appName.value.charAt(0).toUpperCase());
-const redirectHost = computed(() => getUrlHost(props.redirectUri));
+const redirectHost = computed(() => getRedirectLabel(props.redirectUri));
 </script>
 
 <template>

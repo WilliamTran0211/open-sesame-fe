@@ -6,8 +6,9 @@ const scopesStore = useScopesStore();
 
 // Scopes already on the client but since deactivated/removed: keep them visible so
 // the owner can drop them (the API rejects inactive scopes on save).
+// Only knowable once the list has loaded; before that every scope would look stale.
 const staleScopes = computed(() =>
-  model.value.filter((name) => !scopesStore.findScope(name)),
+  scopesStore.loaded ? model.value.filter((name) => !scopesStore.findScope(name)) : [],
 );
 
 onMounted(() => scopesStore.fetchScopes());
@@ -15,7 +16,11 @@ onMounted(() => scopesStore.fetchScopes());
 
 <template>
   <div class="scope-picker">
-    <div v-if="scopesStore.isLoading" class="grid gap-3" :aria-label="t('common.loading')">
+    <div
+      v-if="scopesStore.isLoading || (!scopesStore.loaded && !scopesStore.error)"
+      class="grid gap-3"
+      :aria-label="t('common.loading')"
+    >
       <span v-for="row in 3" :key="row" class="skeleton h-9 w-full" aria-hidden="true" />
     </div>
 

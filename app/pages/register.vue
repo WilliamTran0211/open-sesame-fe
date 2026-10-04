@@ -48,6 +48,11 @@ async function register() {
   }
 }
 
+// An error from sign-in (a wrong password, say) doesn't belong here.
+onMounted(() => {
+  auth.error = "";
+});
+
 useHead({ title: () => t("titles.register") });
 </script>
 

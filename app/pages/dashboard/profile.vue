@@ -9,7 +9,7 @@ definePageMeta({
 
 import type { MfaMethod, MfaSetup } from "~/stores/auth";
 import { isValidEmail } from "~/utils/email";
-import { isPasswordQualified } from "~/utils/password";
+import { passwordProblem } from "~/utils/password";
 
 const PROFILE_PATH = "/dashboard/profile";
 const MFA_RESEND_COOLDOWN_SECONDS = 60;
@@ -269,7 +269,8 @@ function downloadRecoveryCodes() {
   link.href = url;
   link.download = "open-sesame-recovery-codes.txt";
   link.click();
-  URL.revokeObjectURL(url);
+  // Revoking in the same tick can cancel the download in some browsers.
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function dismissRecoveryCodes() {
@@ -279,8 +280,9 @@ function dismissRecoveryCodes() {
 
 const newPasswordError = computed(() => {
   if (!passwordSubmitted.value) return "";
-  if (!isPasswordQualified(newPassword.value, fullName.value)) {
-    return t("auth.errors.weakPassword");
+  const problem = passwordProblem(newPassword.value, fullName.value);
+  if (problem) {
+    return t(problem);
   }
   if (newPassword.value === currentPassword.value) {
     return t("profile.password.sameAsCurrent");
@@ -332,11 +334,19 @@ onMounted(async () => {
   mfaEnabled.value = typeof enabled === "boolean" ? enabled : null;
 });
 
+// Follow profile updates, but only for fields the person hasn't started editing.
 watch(
   () => auth.user,
-  (user) => {
-    if (user && !isSavingProfile.value) {
+  (user, previous) => {
+    if (!user || isSavingProfile.value) {
+      return;
+    }
+
+    if (fullName.value === String(previous?.full_name || "")) {
       fullName.value = String(user.full_name || "");
+    }
+
+    if (email.value === String(previous?.email || "")) {
       email.value = String(user.email || "");
     }
   },
@@ -538,7 +548,6 @@ useHead({ title: () => t("titles.profile") });
               : t('profile.mfa.code')
           "
           :error="!!mfaError && !mfaCode"
-          :error-message="mfaError"
         />
         <div class="dash-form-actions">
           <button type="submit" class="btn btn-primary" :disabled="mfaBusy">
@@ -639,7 +648,6 @@ useHead({ title: () => t("titles.profile") });
         autocomplete="one-time-code"
         :placeholder="t('profile.mfa.codePlaceholder')"
         :error="!!mfaError && !mfaCode"
-        :error-message="mfaError"
       />
       <div class="dash-form-actions">
         <button type="submit" class="btn btn-outline" :disabled="mfaBusy">

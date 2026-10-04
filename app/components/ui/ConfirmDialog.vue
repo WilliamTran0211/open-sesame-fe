@@ -36,7 +36,8 @@ watch(
 </script>
 
 <template>
-  <dialog ref="dialog" class="modal" @cancel.prevent="emit('cancel')">
+  <!-- Esc closes it too, except while the action is running. -->
+  <dialog ref="dialog" class="modal" @cancel.prevent="!loading && emit('cancel')">
     <div class="modal-box">
       <h3 class="text-lg font-bold">{{ title }}</h3>
       <p class="py-3 text-sm opacity-75">{{ message }}</p>

@@ -6,10 +6,10 @@ definePageMeta({
 
 import { ArrowRight } from "lucide";
 import { oauthApi } from "~/services/oauth";
-import { apiErrorMessage, getErrorStatus } from "~/utils/api";
+import { apiErrorMessage } from "~/utils/api";
 import {
   buildDeniedUrl,
-  getUrlHost,
+  getRedirectLabel,
   isRegisteredRedirect,
   parseAuthorizeRequest,
 } from "~/utils/oauth";
@@ -66,10 +66,9 @@ async function allow() {
   try {
     ({ redirect_to: redirectTo } = await oauthApi.consent(request.value));
   } catch (requestError) {
-    // The API also answers 404 when the session behind the cookie is gone. Check the
-    // session before blaming the app, and send people to sign in if that's the cause.
-    if (getErrorStatus(requestError) === 404 && !(await auth.fetchMe())) {
-      await navigateTo({ path: "/login", query: { redirect: route.fullPath } });
+    // The session ended: apiFetch has cleared the user and is reloading to sign-in,
+    // which brings people back here afterwards.
+    if (!auth.user) {
       return;
     }
 
@@ -189,7 +188,7 @@ useHead({ title: () => appName.value ? t("titles.consent", { app: appName.value 
         {{
           t("oauth.finePrint", {
             app: appName,
-            host: getUrlHost(request.redirectUri),
+            host: getRedirectLabel(request.redirectUri),
           })
         }}
       </p>

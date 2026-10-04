@@ -6,7 +6,7 @@ definePageMeta({
 
 import { isValidEmail } from "~/utils/email";
 import { resolveLoginRedirect } from "~/utils/oauth";
-import { isPasswordQualified } from "~/utils/password";
+import { passwordProblem } from "~/utils/password";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -24,7 +24,8 @@ const returnTo = computed(
 );
 
 const step = ref<Step>("request");
-const email = ref(String(route.query.email || ""));
+const queryEmail = Array.isArray(route.query.email) ? route.query.email[0] : route.query.email;
+const email = ref(String(queryEmail || ""));
 const otp = ref("");
 const newPassword = ref("");
 const confirmPassword = ref("");
@@ -39,9 +40,10 @@ const emailError = computed(
   () => submitted.value && !isValidEmail(email.value),
 );
 const otpError = computed(() => submitted.value && otp.value.length !== 6);
-const newPasswordError = computed(
-  () => submitted.value && !isPasswordQualified(newPassword.value),
+const newPasswordProblem = computed(() =>
+  submitted.value ? passwordProblem(newPassword.value) : null,
 );
+const newPasswordError = computed(() => !!newPasswordProblem.value);
 const confirmPasswordError = computed(
   () =>
     (submitted.value || !!confirmPassword.value) &&
@@ -177,8 +179,8 @@ useHead({ title: () => t("titles.reset") });
       <AlertMessage v-if="error">
         {{ error }}
       </AlertMessage>
-      <AlertMessage v-else-if="newPasswordError">
-        {{ t("auth.errors.weakPassword") }}
+      <AlertMessage v-else-if="newPasswordProblem">
+        {{ t(newPasswordProblem) }}
       </AlertMessage>
       <AlertMessage v-else-if="resent" tone="success">
         {{ t("auth.verify.resent") }}

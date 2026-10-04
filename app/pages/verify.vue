@@ -5,7 +5,7 @@ definePageMeta({
     "guest",
     () => {
       // Only reachable while an email awaits its code (after sign-up or an email change).
-      if (!useAuthStore().pendingEmail) {
+      if (!useAuthStore().restorePendingEmail()) {
         return navigateTo("/register");
       }
     },

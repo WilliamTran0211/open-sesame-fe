@@ -40,8 +40,10 @@ function rowError(value: string) {
     return "";
   }
 
+  // A blank row is an unused slot and is dropped on save; the form says when at
+  // least one URI is needed.
   if (!value.trim()) {
-    return t("clients.form.redirectRequired");
+    return "";
   }
 
   if (!isValidRedirectUri(value.trim())) {

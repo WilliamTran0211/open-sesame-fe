@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { UserSession } from "~/stores/auth";
-import { getErrorMessage, getErrorStatus } from "~/utils/api";
+import { apiErrorMessage } from "~/utils/api";
 
 const auth = useAuthStore();
 const { t, locale } = useI18n();
@@ -20,9 +20,13 @@ function describeAgent(userAgent: string | null) {
 
   const browser =
     [
+      // iOS browsers report themselves as Safari plus their own token.
       ["Edg/", "Edge"],
+      ["EdgiOS/", "Edge"],
       ["OPR/", "Opera"],
       ["Firefox/", "Firefox"],
+      ["FxiOS/", "Firefox"],
+      ["CriOS/", "Chrome"],
       ["Chrome/", "Chrome"],
       ["Safari/", "Safari"],
     ].find(([token]) => userAgent.includes(token!))?.[1] || "";
@@ -56,15 +60,12 @@ async function load() {
       (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at),
     );
   } catch (requestError) {
-    // apiFetch already sends an expired session to sign-in; don't flash an error meanwhile.
-    if (getErrorStatus(requestError) === 401) {
+    // The session ended: apiFetch is already sending people to sign in.
+    if (!auth.user) {
       return;
     }
 
-    loadError.value = getErrorMessage(
-      requestError,
-      t("profile.sessions.errors.load"),
-    );
+    loadError.value = apiErrorMessage(requestError, "profile.sessions.errors.load");
   } finally {
     isLoading.value = false;
   }
@@ -77,7 +78,6 @@ async function revokeAll() {
   confirmRevoke.value = false;
 
   if (!revokeError.value) {
-    // This session was revoked too.
     // This session ended too; reload so nothing from it stays in memory.
     reloadNuxtApp({ path: "/login", force: true });
   }

@@ -48,8 +48,11 @@ async function signIn() {
 }
 
 onMounted(() => {
+  // An error from another page (a failed 2FA step, say) doesn't belong here.
+  auth.error = "";
+
   // Coming from OTP verification: the email is known, only the password is left.
-  if (justVerified.value && auth.pendingEmail) {
+  if (justVerified.value && auth.restorePendingEmail()) {
     email.value = auth.pendingEmail;
   } else if (justReset.value && resetEmail.value) {
     email.value = resetEmail.value;

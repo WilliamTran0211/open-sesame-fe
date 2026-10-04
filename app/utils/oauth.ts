@@ -88,7 +88,19 @@ export function isValidRedirectUri(value: string) {
     return LOOPBACK_HOSTS.has(url.hostname);
   }
 
-  return !["javascript:", "data:", "file:", "vbscript:"].includes(url.protocol);
+  return !UNSAFE_PROTOCOLS.includes(url.protocol);
+}
+
+const UNSAFE_PROTOCOLS = ["javascript:", "data:", "file:", "vbscript:"];
+
+// A URL the browser can be sent to: https, http or an app's own scheme
+// (com.example.app:/oauth), never script or file URLs.
+function isNavigableUrl(value: string) {
+  try {
+    return !UNSAFE_PROTOCOLS.includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
 }
 
 // Mirrors the query params accepted by the API's GET /oauth/authorize.
@@ -110,9 +122,13 @@ export type AuthorizeRequestError =
   | "missingState"
   | "invalidChallengeMethod";
 
-function firstValue(value: LocationQuery[string] | undefined) {
+function rawValue(value: LocationQuery[string] | undefined) {
   const item = Array.isArray(value) ? value[0] : value;
-  return typeof item === "string" ? item.trim() : "";
+  return typeof item === "string" ? item : "";
+}
+
+function firstValue(value: LocationQuery[string] | undefined) {
+  return rawValue(value).trim();
 }
 
 export function parseScopes(scope: string) {
@@ -126,10 +142,12 @@ export function parseAuthorizeRequest(
   | { request: null; error: AuthorizeRequestError } {
   const responseType = firstValue(query.response_type);
   const clientId = firstValue(query.client_id);
-  const redirectUri = firstValue(query.redirect_uri);
+  // Passed back to the API untouched: it compares them exactly, and the app checks
+  // that state comes back byte for byte.
+  const redirectUri = rawValue(query.redirect_uri);
   const scope = firstValue(query.scope);
-  const state = firstValue(query.state);
-  const codeChallenge = firstValue(query.code_challenge);
+  const state = rawValue(query.state);
+  const codeChallenge = rawValue(query.code_challenge);
   const codeChallengeMethod = firstValue(query.code_challenge_method);
 
   if (responseType !== "code") {
@@ -140,11 +158,11 @@ export function parseAuthorizeRequest(
     return { request: null, error: "missingClient" };
   }
 
-  if (!getUrlHost(redirectUri)) {
+  if (!isNavigableUrl(redirectUri)) {
     return { request: null, error: "invalidRedirect" };
   }
 
-  if (!state) {
+  if (!state.trim()) {
     return { request: null, error: "missingState" };
   }
 
@@ -167,9 +185,12 @@ export function parseAuthorizeRequest(
   };
 }
 
-export function getUrlHost(url: string) {
+// Where a redirect goes, for people: the host, or the app's scheme for native
+// redirect URIs like com.example.app:/oauth, which have no host.
+export function getRedirectLabel(url: string) {
   try {
-    return new URL(url).host;
+    const parsed = new URL(url);
+    return parsed.host || parsed.protocol.replace(/:$/, "");
   } catch {
     return "";
   }
@@ -187,7 +208,6 @@ function appendQuery(url: string, params: Record<string, string | undefined>) {
   return target.toString();
 }
 
-// The API issues the code once the browser (carrying the session cookie) hits this URL.
 // RFC 6749 §4.1.2.1 — tell the client the user said no.
 export function buildDeniedUrl(request: AuthorizeRequest) {
   return appendQuery(request.redirectUri, {

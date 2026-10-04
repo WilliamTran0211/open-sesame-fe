@@ -9,7 +9,7 @@ import {
   type ApiError,
 } from "~/utils/api";
 import { isValidEmail } from "~/utils/email";
-import { isPasswordQualified } from "~/utils/password";
+import { passwordProblem } from "~/utils/password";
 
 // API shapes live with their endpoints; re-exported here for existing imports.
 export type { UserSession } from "~/services/auth";
@@ -76,6 +76,16 @@ export const useAuthStore = defineStore("auth", () => {
     if (import.meta.client) {
       localStorage.setItem(PENDING_EMAIL_KEY, email);
     }
+  }
+
+  // Server-rendered pages start with an empty pendingEmail (localStorage is browser-only);
+  // pick up the saved one once in the browser.
+  function restorePendingEmail() {
+    if (import.meta.client && !pendingEmail.value) {
+      pendingEmail.value = localStorage.getItem(PENDING_EMAIL_KEY) || "";
+    }
+
+    return pendingEmail.value;
   }
 
   function clearPendingEmail() {
@@ -281,8 +291,9 @@ export const useAuthStore = defineStore("auth", () => {
       return false;
     }
 
-    if (!isPasswordQualified(password, fullName)) {
-      error.value = t("auth.errors.weakPassword");
+    const problem = passwordProblem(password, fullName);
+    if (problem) {
+      error.value = t(problem);
       isLoading.value = false;
       return false;
     }
@@ -442,8 +453,9 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       await authApi.logout();
     } catch (requestError) {
+      // Already signed out on the API side (no cookie, or the session is gone).
       const status = getErrorStatus(requestError);
-      if (status !== 404 && status !== 422) {
+      if (![401, 403, 404, 422].includes(status ?? 0)) {
         error.value = apiErrorMessage(requestError, "auth.errors.signOut");
       }
     } finally {
@@ -475,6 +487,7 @@ export const useAuthStore = defineStore("auth", () => {
     verifyEmail,
     resendVerification,
     setPendingEmail,
+    restorePendingEmail,
     clearPendingEmail,
     updateProfile,
     changePassword,

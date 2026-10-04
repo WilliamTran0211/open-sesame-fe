@@ -120,6 +120,21 @@ describe("parseAuthorizeRequest", () => {
     ).toBe("invalidChallengeMethod");
   });
 
+  it("accepts a native app's redirect URI", () => {
+    const { request } = parseAuthorizeRequest({ ...base, redirect_uri: "com.example.app:/oauth" });
+    expect(request?.redirectUri).toBe("com.example.app:/oauth");
+  });
+
+  it("refuses script and file redirect URIs", () => {
+    expect(parseAuthorizeRequest({ ...base, redirect_uri: "javascript:alert(1)" }).error).toBe(
+      "invalidRedirect",
+    );
+  });
+
+  it("keeps state exactly as sent, because the app compares it byte for byte", () => {
+    expect(parseAuthorizeRequest({ ...base, state: " s1 " }).request?.state).toBe(" s1 ");
+  });
+
   it("rejects other response types", () => {
     expect(parseAuthorizeRequest({ ...base, response_type: "token" }).error).toBe(
       "unsupportedResponseType",

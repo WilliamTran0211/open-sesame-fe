@@ -82,6 +82,19 @@ function serverSessionHeaders(): Record<string, string> | undefined {
   return session ? { cookie: session } : undefined;
 }
 
+// The API answers 404 (not 401) when the session behind the cookie no longer exists,
+// so a 404 alone can't tell "that client is gone" from "you were signed out".
+// Ask /users/me, which only fails like that when the session is gone.
+async function sessionIsGone(apiBaseUrl: string) {
+  try {
+    await $fetch(`${apiBaseUrl}/users/me`, { credentials: "include" });
+    return false;
+  } catch (error) {
+    const status = getErrorStatus(error);
+    return status === 401 || status === 404;
+  }
+}
+
 // Every API call sends the session cookie, which lives on the API origin.
 export async function apiFetch<T>(path: string, options: ApiRequestOptions = {}) {
   const nuxtApp = useNuxtApp();
@@ -96,8 +109,18 @@ export async function apiFetch<T>(path: string, options: ApiRequestOptions = {})
       headers,
     });
   } catch (requestError) {
-    if (getErrorStatus(requestError) === 401) {
-      // After an await the Nuxt context can be gone; restore it for the router and store.
+    const status = getErrorStatus(requestError);
+    // After an await the Nuxt context can be gone; restore it for the router and store.
+    const signedIn = nuxtApp.runWithContext(() => !!useAuthStore().user);
+    const sessionEnded =
+      status === 401 ||
+      (status === 404 &&
+        import.meta.client &&
+        signedIn &&
+        path !== "/users/me" &&
+        (await sessionIsGone(config.public.apiBaseUrl)));
+
+    if (sessionEnded) {
       await nuxtApp.runWithContext(handleExpiredSession);
     }
 
