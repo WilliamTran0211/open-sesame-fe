@@ -27,7 +27,6 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css"],
   // Components are grouped in folders by role; their names stay the file names.
   components: [{ path: "~/components", pathPrefix: false }],
-  // Auth is only known in the browser, so don't server-render protected pages.
   routeRules: {
     "/**": {
       headers: {
@@ -45,12 +44,22 @@ export default defineNuxtConfig({
         // HSTS belongs on the production proxy; on localhost it would pin every local app to https.
       },
     },
-    "/dashboard": { ssr: false },
-    "/dashboard/**": { ssr: false },
-    "/success": { ssr: false },
+    // Sign-in pages are server-rendered with the visitor's session (the server passes
+    // the session cookie to the API), so a signed-in visitor gets a redirect, not a
+    // sign-in form. The response depends on that cookie: never let a cache share it.
+    "/": { headers: { "Cache-Control": "private, no-store" } },
+    "/login": { headers: { "Cache-Control": "private, no-store" } },
+    "/login/**": { headers: { "Cache-Control": "private, no-store" } },
+    "/register": { headers: { "Cache-Control": "private, no-store" } },
+    "/forgot-password": { headers: { "Cache-Control": "private, no-store" } },
+    "/success": { headers: { "Cache-Control": "private, no-store" } },
+    "/oauth/**": { headers: { "Cache-Control": "private, no-store" } },
     // The pending email lives in localStorage, so it's only readable in the browser.
     "/verify": { ssr: false },
-    "/oauth/**": { ssr: false },
+    // The dashboard loads its data in the browser; rendering only the shell on the
+    // server would add a round trip without showing anything useful sooner.
+    "/dashboard": { ssr: false },
+    "/dashboard/**": { ssr: false },
   },
   runtimeConfig: {
     public: {

@@ -1,11 +1,13 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (import.meta.server) {
+  const auth = useAuthStore();
+  const signedIn = await auth.ensureSession();
+
+  // The server couldn't reach the API to check; let the browser decide.
+  if (import.meta.server && !auth.sessionChecked) {
     return;
   }
 
-  const auth = useAuthStore();
-
-  if (!(await auth.ensureSession())) {
+  if (!signedIn) {
     return navigateTo({ path: "/login", query: { redirect: to.fullPath } });
   }
 

@@ -1,11 +1,8 @@
 import { resolveLoginRedirect } from "~/utils/oauth";
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  // The session cookie belongs to the API origin, so only the browser can check it.
-  if (import.meta.server) {
-    return;
-  }
-
+  // Runs on the server too: it forwards the session cookie to the API, so the first
+  // response is already the right page (or a redirect) instead of a guess.
   const auth = useAuthStore();
   const isAuthenticated = await auth.ensureSession();
 

@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "node --use-system-ca node_modules/nuxt/bin/nuxt.mjs dev",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
+    "preview": "node --use-system-ca node_modules/nuxt/bin/nuxt.mjs preview",
     "postinstall": "nuxt prepare",
     "typecheck": "nuxt typecheck",
     "test": "vitest run"

@@ -91,11 +91,20 @@ export const useAuthStore = defineStore("auth", () => {
       const profile = await usersApi.me();
 
       user.value = profile;
+      sessionChecked.value = true;
       return profile;
     } catch (requestError) {
       const status = getErrorStatus(requestError);
 
       user.value = null;
+
+      // The server couldn't reach the API while rendering: leave the session
+      // unchecked so the browser asks again, and don't show an error for it.
+      if (import.meta.server && status === undefined) {
+        return null;
+      }
+
+      sessionChecked.value = true;
 
       // The API answers 404 when the session cookie points at a session it no
       // longer has; for /users/me that just means "signed out", not an error.
@@ -104,8 +113,6 @@ export const useAuthStore = defineStore("auth", () => {
       }
 
       return null;
-    } finally {
-      sessionChecked.value = true;
     }
   }
 
@@ -452,6 +459,7 @@ export const useAuthStore = defineStore("auth", () => {
     error,
     user,
     isAuthenticated,
+    sessionChecked,
     pendingEmail,
     signIn,
     mfaChallengeId,

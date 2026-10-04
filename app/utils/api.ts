@@ -48,7 +48,9 @@ export function getErrorStatus(error: unknown) {
 async function handleExpiredSession() {
   const auth = useAuthStore();
 
-  if (!auth.user) {
+  // During server rendering there is nothing in memory to clear; the auth
+  // middleware turns the missing user into a redirect.
+  if (import.meta.server || !auth.user) {
     return;
   }
 
@@ -62,16 +64,36 @@ async function handleExpiredSession() {
   }
 }
 
+const SESSION_COOKIE = "session_id";
+
+// During server rendering the call comes from this server, not the browser, so pass
+// the visitor's session cookie along. Only that cookie goes, and only to our API.
+function serverSessionHeaders(): Record<string, string> | undefined {
+  if (!import.meta.server) {
+    return undefined;
+  }
+
+  const cookies = useRequestHeaders(["cookie"]).cookie ?? "";
+  const session = cookies
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${SESSION_COOKIE}=`));
+
+  return session ? { cookie: session } : undefined;
+}
+
 // Every API call sends the session cookie, which lives on the API origin.
 export async function apiFetch<T>(path: string, options: ApiRequestOptions = {}) {
   const nuxtApp = useNuxtApp();
   const config = useRuntimeConfig();
+  const headers = serverSessionHeaders();
 
   try {
     return await $fetch<T>(`${config.public.apiBaseUrl}${path}`, {
       method: options.method ?? "GET",
       body: options.body,
       credentials: "include",
+      headers,
     });
   } catch (requestError) {
     if (getErrorStatus(requestError) === 401) {
