@@ -29,13 +29,15 @@
 @plugin "daisyui/theme" {
   name: "dark";
   prefersdark: true;
-  /* On dark grounds the pastel gold reads well as text too (12:1), so ink matches it. */
-  --color-primary: #f0d48f;
-  --color-primary-content: #2b2007;
-  --color-primary-ink: #f0d48f;
-  --color-primary-soft: #393324;
+  /* A deeper bee yellow than the light theme's pastel: it glows on dark grounds and
+     reads as text too (11.7:1 on the page, 10.6:1 for dark text on it), so ink matches it. */
+  --color-primary: #ffc21a;
+  --color-primary-content: #231a02;
+  --color-primary-ink: #ffc21a;
+  /* Amber-tinted surface; the yellow on it stays at 8.2:1. */
+  --color-primary-soft: #3a2e10;
   --color-secondary: #c8bfae;
-  --color-accent: #c9a55a;
+  --color-accent: #e0a31a;
   --color-base-100: #1b1913;
   --color-base-200: #121110;
   --color-base-300: #2c2920;
