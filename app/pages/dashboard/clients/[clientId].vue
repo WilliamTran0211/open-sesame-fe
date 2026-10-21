@@ -229,6 +229,7 @@ useHead({ title: () => client.value?.name || t("titles.clients") });
       <h2 class="dash-card-title">{{ t("clients.integration.title") }}</h2>
       <p class="dash-field-hint">{{ t("clients.integration.description") }}</p>
       <CopyField :label="t('clients.integration.authorizeUrl')" :value="authorizeExample" />
+      <SignInButton />
     </section>
 
     <section class="dash-card dash-danger">

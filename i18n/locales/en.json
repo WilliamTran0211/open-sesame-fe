@@ -4,6 +4,7 @@
     "useLight": "Switch to light theme"
   },
   "common": {
+    "copyCode": "Copy code",
     "loading": "Loading",
     "errors": {
       "network": "Can't reach Open Sesame right now. Check your connection and try again in a moment.",
@@ -404,7 +405,14 @@
     "integration": {
       "title": "Integration",
       "description": "Send users to this URL to start sign-in. Replace the placeholders with values your app generates per request.",
-      "authorizeUrl": "Authorize URL"
+      "authorizeUrl": "Authorize URL",
+      "button": {
+        "title": "Sign-in button",
+        "description": "Paste it on your sign-in page and point it at the route on your server that starts the sign-in.",
+        "style": "Button style",
+        "dark": "Dark",
+        "gold": "Gold"
+      }
     },
     "rotate": {
       "title": "Rotate secret",
