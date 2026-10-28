@@ -239,9 +239,11 @@
     "backToDashboard": "Back to dashboard",
     "client": {
       "redirectsTo": "Redirects to",
+      "verified": "Verified",
+      "verifiedHint": "Open Sesame has confirmed who publishes this app.",
       "unverified": "Unverified",
       "unverifiedHint": "Open Sesame couldn't confirm who publishes this app. Only continue if you trust it.",
-      "inactive": "This app has been disabled and can't be authorized."
+      "unavailable": "This app doesn't exist or has been disabled, so it can't be authorized."
     },
     "account": {
       "switch": "Not you?"
@@ -427,6 +429,21 @@
       "confirm": "Deactivate",
       "done": "Client deactivated."
     },
+    "verification": {
+      "badge": "Verified",
+      "title": "Verification",
+      "description": "Verified apps show a Verified badge on the consent screen. Only verify an app after confirming who publishes it.",
+      "isVerified": "This app is verified.",
+      "isUnverified": "This app is not verified.",
+      "verify": "Verify app",
+      "verifyTitle": "Verify this app?",
+      "verifyMessage": "People will see a Verified badge when this app asks for access. Continue?",
+      "verifyDone": "App verified.",
+      "unverify": "Remove verification",
+      "unverifyTitle": "Remove verification?",
+      "unverifyMessage": "The Verified badge will disappear from this app's consent screen. Continue?",
+      "unverifyDone": "Verification removed."
+    },
     "activate": {
       "title": "Reactivate client",
       "description": "Allow sign-ins again. Previously revoked tokens stay revoked.",
@@ -473,7 +490,8 @@
       "update": "Unable to save your changes.",
       "rotate": "Unable to rotate the secret.",
       "activate": "Unable to reactivate the client.",
-      "deactivate": "Unable to deactivate the client."
+      "deactivate": "Unable to deactivate the client.",
+      "verify": "Unable to change the verification."
     }
   },
   "profile": {

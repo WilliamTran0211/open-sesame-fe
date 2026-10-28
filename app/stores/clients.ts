@@ -99,6 +99,14 @@ export const useClientsStore = defineStore("clients", () => {
     }, active ? "clients.errors.activate" : "clients.errors.deactivate");
   }
 
+  function setVerified(clientId: string, isVerified: boolean) {
+    return mutate(async () => {
+      const client = await clientsApi.setVerified(clientId, isVerified);
+      upsert(client);
+      return client;
+    }, "clients.errors.verify");
+  }
+
   function takeRevealedSecret(clientId: string) {
     if (revealedSecret.value?.clientId !== clientId) {
       return null;
@@ -121,6 +129,7 @@ export const useClientsStore = defineStore("clients", () => {
     updateClient,
     rotateSecret,
     setActive,
+    setVerified,
     takeRevealedSecret,
   };
 });

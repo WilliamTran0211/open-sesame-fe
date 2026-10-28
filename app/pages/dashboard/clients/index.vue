@@ -120,6 +120,9 @@ useHead({ title: () => t("titles.clients") });
           <code>{{ client.client_id }}</code>
         </span>
         <span class="client-row-meta">
+          <span v-if="client.is_verified" class="badge badge-info badge-sm">
+            {{ t("clients.verification.badge") }}
+          </span>
           <span class="badge badge-ghost badge-sm">
             {{ t(`clients.types.${client.client_type}.title`) }}
           </span>

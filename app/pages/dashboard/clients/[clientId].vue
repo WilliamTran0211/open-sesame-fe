@@ -7,11 +7,12 @@ definePageMeta({
 
 import type { OAuthClientPayload } from "~/utils/oauth";
 
-type PendingAction = "rotate" | "deactivate" | "activate" | null;
+type PendingAction = "rotate" | "deactivate" | "activate" | "verify" | "unverify" | null;
 
 const route = useRoute();
 const config = useRuntimeConfig();
 const clientsStore = useClientsStore();
+const auth = useAuthStore();
 const { t } = useI18n();
 
 const clientId = computed(() => String(route.params.clientId));
@@ -66,6 +67,20 @@ const dialog = computed(() => {
         confirm: t("clients.activate.confirm"),
         danger: false,
       };
+    case "verify":
+      return {
+        title: t("clients.verification.verifyTitle"),
+        message: t("clients.verification.verifyMessage"),
+        confirm: t("clients.verification.verify"),
+        danger: false,
+      };
+    case "unverify":
+      return {
+        title: t("clients.verification.unverifyTitle"),
+        message: t("clients.verification.unverifyMessage"),
+        confirm: t("clients.verification.unverify"),
+        danger: true,
+      };
     default:
       return null;
   }
@@ -89,6 +104,15 @@ async function confirmAction() {
   if (action === "rotate") {
     await clientsStore.rotateSecret(clientId.value);
     secret.value = clientsStore.takeRevealedSecret(clientId.value);
+  } else if (action === "verify" || action === "unverify") {
+    const updated = await clientsStore.setVerified(clientId.value, action === "verify");
+
+    if (updated) {
+      notice.value =
+        action === "verify"
+          ? t("clients.verification.verifyDone")
+          : t("clients.verification.unverifyDone");
+    }
   } else if (action === "deactivate" || action === "activate") {
     const updated = await clientsStore.setActive(clientId.value, action === "activate");
 
@@ -145,6 +169,9 @@ useHead({ title: () => client.value?.name || t("titles.clients") });
           :class="client.is_active ? 'badge-success' : 'badge-neutral'"
         >
           {{ client.is_active ? t("clients.status.active") : t("clients.status.inactive") }}
+        </span>
+        <span v-if="client.is_verified" class="badge badge-sm badge-info">
+          {{ t("clients.verification.badge") }}
         </span>
         <span class="badge badge-sm badge-ghost">
           {{ t(`clients.types.${client.client_type}.title`) }}
@@ -230,6 +257,35 @@ useHead({ title: () => client.value?.name || t("titles.clients") });
       <p class="dash-field-hint">{{ t("clients.integration.description") }}</p>
       <CopyField :label="t('clients.integration.authorizeUrl')" :value="authorizeExample" />
       <SignInButton />
+    </section>
+
+    <!-- Only superusers can verify an app, so owners never see this card. -->
+    <section v-if="auth.user?.is_superuser" class="dash-card">
+      <h2 class="dash-card-title">{{ t("clients.verification.title") }}</h2>
+      <p class="dash-field-hint">{{ t("clients.verification.description") }}</p>
+      <div class="dash-danger-row">
+        <div>
+          <strong>
+            {{
+              client.is_verified
+                ? t("clients.verification.isVerified")
+                : t("clients.verification.isUnverified")
+            }}
+          </strong>
+        </div>
+        <button
+          type="button"
+          class="btn btn-outline btn-sm"
+          :disabled="clientsStore.isSaving"
+          @click="pendingAction = client.is_verified ? 'unverify' : 'verify'"
+        >
+          {{
+            client.is_verified
+              ? t("clients.verification.unverify")
+              : t("clients.verification.verify")
+          }}
+        </button>
+      </div>
     </section>
 
     <section class="dash-card dash-danger">

@@ -4,7 +4,7 @@ definePageMeta({
 });
 
 import { ArrowRight } from "lucide";
-import type { OAuthClientInfo } from "~/utils/oauth";
+import type { OAuthClientPublicInfo } from "~/utils/oauth";
 
 const { t } = useI18n();
 
@@ -19,13 +19,14 @@ useSeoMeta({
 });
 
 // Sample data for the consent preview, rendered with the real consent components.
-const exampleClient: OAuthClientInfo = {
+const exampleClient: OAuthClientPublicInfo = {
   client_id: "ledgerline-web",
   name: "Ledgerline",
-  client_type: "confidential",
-  redirect_uris: ["https://app.ledgerline.io/callback"],
-  is_active: true,
+  allowed_scopes: ["openid", "profile", "email"],
+  is_verified: true,
+  redirect_uri_registered: true,
 };
+const exampleRedirectUri = "https://app.ledgerline.io/callback";
 </script>
 
 <template>
@@ -71,7 +72,7 @@ const exampleClient: OAuthClientInfo = {
           <div class="oauth-consent">
             <OAuthClientSummary
               :client-id="exampleClient.client_id"
-              :redirect-uri="exampleClient.redirect_uris[0]!"
+              :redirect-uri="exampleRedirectUri"
               :client="exampleClient"
             />
             <div>

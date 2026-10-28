@@ -40,9 +40,22 @@ export type OAuthClientInfo = {
   is_active: boolean;
 };
 
+// What anyone may see about an app (GET /oauth/clients/{client_id}). The consent
+// screen is built from this; it has no redirect URIs, owner or settings.
+export type OAuthClientPublicInfo = {
+  client_id: string;
+  name: string;
+  allowed_scopes: string[];
+  is_verified: boolean;
+  // Whether the redirect_uri that was sent along is registered. null when none was sent.
+  redirect_uri_registered: boolean | null;
+};
+
 // Full client record returned by the /clients endpoints (owner view).
 export type OAuthClient = OAuthClientInfo & {
   id: string;
+  // Set by a superuser; owners can't verify their own app.
+  is_verified: boolean;
   grant_types: string[];
   allowed_scopes: string[];
   require_pkce: boolean;
@@ -217,11 +230,10 @@ export function buildDeniedUrl(request: AuthorizeRequest) {
   });
 }
 
-export function isRegisteredRedirect(
-  client: OAuthClientInfo | null,
-  redirectUri: string,
-) {
-  return !!client?.redirect_uris.includes(redirectUri);
+// The API compares the redirect URI exactly, as /oauth/authorize does. Only a URI it
+// confirmed is safe to send the browser back to; anything else would be an open redirect.
+export function isRegisteredRedirect(client: OAuthClientPublicInfo | null) {
+  return client?.redirect_uri_registered === true;
 }
 
 const INTERNAL_ORIGIN = "https://open-sesame.invalid";

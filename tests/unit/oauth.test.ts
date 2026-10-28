@@ -146,17 +146,18 @@ describe("isRegisteredRedirect (deny without an open redirect)", () => {
   const client = {
     client_id: "app",
     name: "App",
-    client_type: "confidential" as const,
-    redirect_uris: ["https://app.example.com/callback"],
-    is_active: true,
+    allowed_scopes: ["openid"],
+    is_verified: false,
+    redirect_uri_registered: true as boolean | null,
   };
 
-  it("only allows registered URIs", () => {
-    expect(isRegisteredRedirect(client, "https://app.example.com/callback")).toBe(true);
-    expect(isRegisteredRedirect(client, "https://evil.example/callback")).toBe(false);
+  it("only allows a redirect URI the API confirmed", () => {
+    expect(isRegisteredRedirect(client)).toBe(true);
+    expect(isRegisteredRedirect({ ...client, redirect_uri_registered: false })).toBe(false);
+    expect(isRegisteredRedirect({ ...client, redirect_uri_registered: null })).toBe(false);
   });
 
   it("refuses when the client is unknown", () => {
-    expect(isRegisteredRedirect(null, "https://app.example.com/callback")).toBe(false);
+    expect(isRegisteredRedirect(null)).toBe(false);
   });
 });

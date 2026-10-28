@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { LockKeyhole } from "lucide";
-import { getRedirectLabel, type OAuthClientInfo } from "~/utils/oauth";
+import { getRedirectLabel, type OAuthClientPublicInfo } from "~/utils/oauth";
 
 const props = defineProps<{
   clientId: string;
   redirectUri: string;
-  client: OAuthClientInfo | null;
+  client: OAuthClientPublicInfo | null;
   loading?: boolean;
 }>();
 
@@ -32,7 +32,14 @@ const redirectHost = computed(() => getRedirectLabel(props.redirectUri));
       <p class="oauth-client-name">
         <strong>{{ appName }}</strong>
         <span
-          v-if="!loading && !client"
+          v-if="!loading && client?.is_verified"
+          class="badge badge-success badge-xs"
+          :title="t('oauth.client.verifiedHint')"
+        >
+          {{ t("oauth.client.verified") }}
+        </span>
+        <span
+          v-else-if="!loading"
           class="badge badge-warning badge-xs"
           :title="t('oauth.client.unverifiedHint')"
         >

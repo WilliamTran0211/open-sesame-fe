@@ -19,7 +19,12 @@ type ConsentState = "ready" | "redirecting" | "cancelled";
 const auth = useAuthStore();
 const route = useRoute();
 const { t } = useI18n();
-const { client, isLoading: isClientLoading, load: loadClient } = useOAuthClient();
+const {
+  client,
+  isLoading: isClientLoading,
+  unavailable: clientUnavailable,
+  load: loadClient,
+} = useOAuthClient();
 
 const scopesStore = useScopesStore();
 
@@ -31,8 +36,8 @@ const appName = computed(
   () => client.value?.name || request.value?.clientId || "",
 );
 const userName = computed(() => auth.getDisplayName(auth.user));
-// The API grants only requested ∩ allowed. When we can see the client's allow-list
-// (its owner), show exactly what will be granted instead of what was asked for.
+// The API grants only requested ∩ allowed. Show exactly what will be granted
+// instead of what was asked for.
 const grantedScopes = computed(() => {
   const requested = request.value?.scopes || [];
   const allowed = client.value?.allowed_scopes;
@@ -42,7 +47,6 @@ const grantedScopes = computed(() => {
 const scopesNarrowed = computed(
   () => grantedScopes.value.length < (request.value?.scopes.length || 0),
 );
-const clientInactive = computed(() => client.value?.is_active === false);
 
 // The API appends ?code=...&state=... (or &code=... when the URI has a query) to
 // the redirect URI it validated. Check that anyway, so Allow can only ever send the
@@ -91,9 +95,9 @@ function deny() {
     return;
   }
 
-  // Only bounce back to a redirect we could confirm is registered for this client;
+  // Only bounce back to a redirect the API confirmed is registered for this client;
   // otherwise this page would be an open redirect.
-  if (isRegisteredRedirect(client.value, request.value.redirectUri)) {
+  if (isRegisteredRedirect(client.value)) {
     consentState.value = "redirecting";
     window.location.assign(buildDeniedUrl(request.value));
     return;
@@ -112,7 +116,7 @@ onMounted(() => {
   scopesStore.fetchScopes();
 
   if (request.value) {
-    loadClient(request.value.clientId);
+    loadClient(request.value.clientId, request.value.redirectUri);
   }
 });
 
@@ -176,8 +180,8 @@ useHead({ title: () => appName.value ? t("titles.consent", { app: appName.value 
         </p>
       </div>
 
-      <AlertMessage v-if="clientInactive">
-        {{ t("oauth.client.inactive") }}
+      <AlertMessage v-if="clientUnavailable">
+        {{ t("oauth.client.unavailable") }}
       </AlertMessage>
 
       <AlertMessage v-if="consentError">
@@ -205,7 +209,7 @@ useHead({ title: () => appName.value ? t("titles.consent", { app: appName.value 
         <button
           type="button"
           class="btn btn-primary"
-          :disabled="consentState === 'redirecting' || clientInactive"
+          :disabled="consentState === 'redirecting' || clientUnavailable"
           @click="allow"
         >
           {{ t("oauth.allow") }}
