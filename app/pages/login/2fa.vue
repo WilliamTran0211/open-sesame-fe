@@ -12,9 +12,13 @@ definePageMeta({
 });
 
 import { ChevronRight, KeyRound, Mail, Smartphone } from "lucide";
+import { loginMethods, type LoginMethod } from "~/utils/mfa";
 import { resolveLoginRedirect } from "~/utils/oauth";
 
-type Method = "totp" | "email" | "recovery";
+type Method = LoginMethod;
+
+// The API allows one email code per challenge every 30 seconds.
+const EMAIL_RESEND_COOLDOWN_SECONDS = 30;
 
 const METHOD_ICONS = { totp: Smartphone, email: Mail, recovery: KeyRound };
 // Recovery codes are 10 characters; app and email codes are 6 digits.
@@ -26,12 +30,14 @@ const route = useRoute();
 const config = useRuntimeConfig();
 const { t } = useI18n();
 
-// When the API says which method the account uses, only offer that one
-// (plus recovery codes); otherwise let people pick.
-const methods = computed<Method[]>(() =>
-  auth.mfaMethod ? [auth.mfaMethod, "recovery"] : ["totp", "email", "recovery"],
+// Only the methods this account has (plus recovery codes). The API's preferred method
+// opens straight away; people switch from there if they have more than one.
+const methods = computed(() => loginMethods(auth.mfaMethods, auth.mfaMethod));
+const method = ref<Method | null>(auth.mfaMethod);
+const { remaining: resendCooldown, start: startResendCooldown } = useCooldown(
+  EMAIL_RESEND_COOLDOWN_SECONDS,
 );
-const method = ref<Method | null>(null);
+const resent = ref(false);
 const code = ref("");
 const submitted = ref(false);
 const redirect = computed(() =>
@@ -53,11 +59,32 @@ const description = computed(() =>
     : t("auth.mfa.choose"),
 );
 
-function choose(next: Method | null) {
+async function sendEmailCode() {
+  resent.value = false;
+  const result = await auth.sendLoginEmailCode();
+
+  // A 429 means a code went out a moment ago, so it still counts as sent.
+  startResendCooldown();
+
+  if (result.error) {
+    auth.error = result.error;
+    return;
+  }
+
+  resent.value = true;
+}
+
+async function choose(next: Method | null) {
   method.value = next;
   code.value = "";
   submitted.value = false;
   auth.error = "";
+  resent.value = false;
+
+  // When email was picked for this sign-in the API already sent the code; otherwise ask for one.
+  if (next === "email" && next !== auth.mfaMethod) {
+    await sendEmailCode();
+  }
 }
 
 async function verify() {
@@ -70,6 +97,13 @@ async function verify() {
     await afterSignIn(redirect.value);
   }
 }
+
+onMounted(() => {
+  // Sign-in already emailed the code when email is the only method (or the preferred one).
+  if (method.value === "email") {
+    startResendCooldown();
+  }
+});
 
 useHead({ title: () => t("titles.mfa") });
 </script>
@@ -100,6 +134,9 @@ useHead({ title: () => t("titles.mfa") });
       <AlertMessage v-if="auth.error">
         {{ auth.error }}
       </AlertMessage>
+      <AlertMessage v-else-if="resent" tone="success">
+        {{ t("auth.verify.resent") }}
+      </AlertMessage>
 
       <FormField
         v-if="isRecovery"
@@ -129,12 +166,20 @@ useHead({ title: () => t("titles.mfa") });
       </button>
     </form>
 
-    <!-- The API emails a new code with each sign-in; there is no resend for a challenge. -->
     <p v-if="method === 'email'" class="help-text">
       {{ t("auth.mfa.noEmail") }}
-      <NuxtLink :to="{ path: '/login', query: { redirect: route.query.redirect } }">
-        {{ t("auth.mfa.signInAgain") }}
-      </NuxtLink>
+      <button
+        type="button"
+        class="link link-primary no-underline hover:underline disabled:no-underline disabled:opacity-60"
+        :disabled="resendCooldown > 0 || auth.isLoading"
+        @click="sendEmailCode"
+      >
+        {{
+          resendCooldown > 0
+            ? t("auth.verify.resendIn", { seconds: resendCooldown })
+            : t("auth.verify.resend")
+        }}
+      </button>
     </p>
   </AuthPanel>
 </template>

@@ -168,7 +168,9 @@
       "submit": "Verify",
       "otherMethod": "Use another method",
       "noEmail": "No email?",
-      "signInAgain": "Sign in again"
+      "errors": {
+        "sendCode": "Couldn't send the code. Try again in a moment."
+      }
     },
     "showPassword": "Show password",
     "hidePassword": "Hide password",
@@ -530,6 +532,16 @@
       "statusOff": "Not enabled",
       "statusUnknown": "Status unknown",
       "statusHint": "The profile API does not report MFA status yet. You can set it up or try disabling it with a current code.",
+      "methods": {
+        "totp": "Authenticator app",
+        "email": "Email codes"
+      },
+      "enabledMethods": "Turned-on methods",
+      "addAnother": "Add another method so you can sign in with either.",
+      "methodAdded": "Method added. Your existing recovery codes still work.",
+      "methodOff": "Method turned off. Two-factor stays on with your other method.",
+      "turnOff": "Turn off {method}",
+      "turnOffAll": "Turn off two-factor",
       "setup": "Use authenticator app",
       "setupEmail": "Use email codes",
       "emailSetup": "We sent a 6-digit code to {email}. Enter it to turn on two-factor authentication.",

@@ -11,6 +11,8 @@ export type MfaSetup = {
 };
 
 export const mfaApi = {
+  // Turns on one method; any that are already on stay on. The first method also returns
+  // the recovery codes; adding another returns an empty list.
   // For the email method the API also sends the first code right away.
   setup: (method: MfaMethod) =>
     apiFetch<MfaSetup>("/users/me/2fa/setup", { method: "POST", body: { method } }),
@@ -24,6 +26,8 @@ export const mfaApi = {
   // Emails a fresh code for the email method; the API ignores it for authenticator apps.
   requestCode: () => apiFetch("/users/me/2fa/request-code", { method: "POST" }),
 
-  disable: (code: string) =>
-    apiFetch("/users/me/2fa/disable", { method: "POST", body: { code } }),
+  // A code from any enabled method, or a recovery code. With a method only that one is turned
+  // off (the others stay on); without one, two-factor is turned off completely.
+  disable: (code: string, method?: MfaMethod) =>
+    apiFetch("/users/me/2fa/disable", { method: "POST", body: { code, method } }),
 };

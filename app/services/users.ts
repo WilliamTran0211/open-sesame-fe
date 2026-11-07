@@ -1,5 +1,6 @@
 // /users endpoints: the signed-in account, sign-up, email verification and password reset.
 import { apiFetch } from "~/utils/api";
+import type { MfaMethod } from "./mfa";
 
 // Mirrors the API's UserResponseSchema; extra fields are tolerated.
 export type AuthUser = {
@@ -13,6 +14,9 @@ export type AuthUser = {
   avatar?: string | null;
   role?: string;
   is_superuser?: boolean;
+  mfa_enabled?: boolean;
+  // Every two-factor method that is turned on.
+  mfa_methods?: MfaMethod[];
   [key: string]: unknown;
 };
 

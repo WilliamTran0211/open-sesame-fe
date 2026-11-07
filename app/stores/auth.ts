@@ -30,6 +30,13 @@ function getChallengeMethod(value: unknown): MfaMethod | null {
   return method === "totp" || method === "email" ? method : null;
 }
 
+function getChallengeMethods(value: unknown): MfaMethod[] {
+  const methods = (value as LoginResponse | undefined)?.mfa_methods;
+  return Array.isArray(methods)
+    ? methods.filter((method) => method === "totp" || method === "email")
+    : [];
+}
+
 function getDisplayName(user: Partial<AuthUser> | null | undefined) {
   if (!user) {
     return "User";
@@ -55,8 +62,10 @@ export const useAuthStore = defineStore("auth", () => {
     "auth.mfaChallengeId",
     () => null,
   );
-  // The account's two-factor method, when the API says which one it is.
+  // The method the API picked for this sign-in (when it is email, the code is already sent),
+  // and every method the account can use, preferred first. Empty when the API doesn't say.
   const mfaMethod = useState<MfaMethod | null>("auth.mfaMethod", () => null);
+  const mfaMethods = useState<MfaMethod[]>("auth.mfaMethods", () => []);
   const isAuthenticated = computed(() => !!user.value);
   const pendingEmail = useState<string>("auth.pendingEmail", () => {
     if (import.meta.client) {
@@ -142,6 +151,7 @@ export const useAuthStore = defineStore("auth", () => {
     error.value = "";
     mfaChallengeId.value = null;
     mfaMethod.value = null;
+    mfaMethods.value = [];
 
     if (!email || !password) {
       error.value = t("auth.errors.signInRequired");
@@ -162,6 +172,7 @@ export const useAuthStore = defineStore("auth", () => {
       if (challengeId) {
         mfaChallengeId.value = challengeId;
         mfaMethod.value = getChallengeMethod(loginResponse);
+        mfaMethods.value = getChallengeMethods(loginResponse);
         isLoading.value = false;
         return "mfa_required";
       }
@@ -180,6 +191,9 @@ export const useAuthStore = defineStore("auth", () => {
       if (challengeId) {
         mfaChallengeId.value = challengeId;
         mfaMethod.value = getChallengeMethod(
+          (requestError as { data?: LoginResponse })?.data,
+        );
+        mfaMethods.value = getChallengeMethods(
           (requestError as { data?: LoginResponse })?.data,
         );
         return "mfa_required";
@@ -233,6 +247,37 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
+  // Asks the API to email the sign-in code. A 429 means one was sent a moment ago,
+  // so callers can treat it as "already on its way".
+  async function sendLoginEmailCode() {
+    const challengeId = mfaChallengeId.value;
+
+    if (!challengeId) {
+      return { error: t("auth.errors.mfaExpired"), cooldown: false };
+    }
+
+    try {
+      await authApi.sendLoginEmailCode(challengeId);
+      return { error: null, cooldown: false };
+    } catch (requestError) {
+      const status = getErrorStatus(requestError);
+      const expired =
+        (requestError as { data?: ApiError })?.data?.error === "invalid_grant";
+
+      return {
+        error:
+          status === 429
+            ? null
+            : apiErrorMessage(
+                requestError,
+                expired ? "auth.errors.mfaExpired" : "auth.mfa.errors.sendCode",
+                expired ? { 400: "auth.errors.mfaExpired" } : {},
+              ),
+        cooldown: status === 429,
+      };
+    }
+  }
+
   async function setupMfa(method: MfaMethod) {
     const { data, error: setupError } = await tryApi(
       () => mfaApi.setup(method),
@@ -248,6 +293,12 @@ export const useAuthStore = defineStore("auth", () => {
       "profile.mfa.errors.confirm",
     );
 
+    // Enabled methods and the status badge come from the profile, so refresh it.
+    if (data) {
+      await fetchMe();
+    }
+
+    // Recovery codes only come with the first method; adding another returns none.
     return { recoveryCodes: data?.recovery_codes ?? [], error: confirmError };
   }
 
@@ -261,11 +312,16 @@ export const useAuthStore = defineStore("auth", () => {
     return result.error;
   }
 
-  async function disableMfa(code: string) {
+  // With a method only that one is turned off; without, two-factor is turned off completely.
+  async function disableMfa(code: string, method?: MfaMethod) {
     const result = await tryApi(
-      () => mfaApi.disable(code),
+      () => mfaApi.disable(code, method),
       "profile.mfa.errors.disable",
     );
+
+    if (!result.error) {
+      await fetchMe();
+    }
 
     return result.error;
   }
@@ -476,7 +532,9 @@ export const useAuthStore = defineStore("auth", () => {
     signIn,
     mfaChallengeId,
     mfaMethod,
+    mfaMethods,
     verifyMfaLogin,
+    sendLoginEmailCode,
     setupMfa,
     confirmMfa,
     requestMfaCode,

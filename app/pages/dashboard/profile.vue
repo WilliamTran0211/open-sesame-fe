@@ -107,7 +107,10 @@ const passwordSubmitted = ref(false);
 const isSavingPassword = ref(false);
 const passwordError = ref("");
 const passwordNotice = ref("");
-const mfaEnabled = ref<boolean | null>(null);
+// null while the profile API doesn't say.
+const mfaEnabled = computed(() =>
+  typeof auth.user?.mfa_enabled === "boolean" ? auth.user.mfa_enabled : null,
+);
 const mfaSetup = ref<MfaSetup | null>(null);
 const mfaQrCode = ref("");
 const mfaCode = ref("");
@@ -116,9 +119,17 @@ const mfaNotice = ref("");
 const mfaBusy = ref(false);
 const recoveryCodes = ref<string[]>([]);
 const mfaCodeSent = ref(false);
-const { remaining: mfaResendCooldown, start: startMfaCooldown } = useCooldown(MFA_RESEND_COOLDOWN_SECONDS);
-// Only known if the profile API reports it; until then offer the email option.
-const usesAuthenticatorApp = computed(() => auth.user?.mfa_method === "totp");
+const { remaining: mfaResendCooldown, start: startMfaCooldown } = useCooldown(
+  MFA_RESEND_COOLDOWN_SECONDS,
+);
+// Several methods can be on at once; the profile API lists the ones that are.
+const MFA_METHODS: MfaMethod[] = ["totp", "email"];
+const enabledMethods = computed<MfaMethod[]>(() => auth.user?.mfa_methods ?? []);
+const emailEnabled = computed(() => enabledMethods.value.includes("email"));
+// Methods that can still be turned on.
+const addableMethods = computed(() =>
+  MFA_METHODS.filter((method) => !enabledMethods.value.includes(method)),
+);
 
 async function sendMfaEmailCode() {
   if (mfaResendCooldown.value > 0) {
@@ -165,11 +176,14 @@ async function startMfaSetup(method: MfaMethod) {
   }
 
   try {
-    mfaQrCode.value = await QRCode.toDataURL(result.setup.provisioning_uri || "", {
-      errorCorrectionLevel: "M",
-      margin: 2,
-      width: 240,
-    });
+    mfaQrCode.value = await QRCode.toDataURL(
+      result.setup.provisioning_uri || "",
+      {
+        errorCorrectionLevel: "M",
+        margin: 2,
+        width: 240,
+      },
+    );
   } catch {
     mfaError.value = t("profile.mfa.errors.qr");
   } finally {
@@ -196,12 +210,17 @@ async function enableMfa() {
     return;
   }
 
-  mfaEnabled.value = true;
+  const firstMethod = result.recoveryCodes.length > 0;
   recoveryCodes.value = result.recoveryCodes;
   mfaSetup.value = null;
   mfaQrCode.value = "";
   mfaCode.value = "";
   mfaCodeSent.value = false;
+
+  // Another method was added: the recovery codes from the first one still work.
+  if (!firstMethod) {
+    mfaNotice.value = t("profile.mfa.methodAdded");
+  }
 }
 
 function cancelMfaSetup() {
@@ -215,7 +234,8 @@ function cancelMfaSetup() {
 // A 6-digit app or email code, or one of the 10-character recovery codes.
 const DISABLE_CODE_PATTERN = /^(\d{6}|[A-Za-z0-9_-]{10})$/;
 
-async function turnOffMfa() {
+// With a method only that one is turned off; without, every method is.
+async function turnOffMfa(method?: MfaMethod) {
   mfaError.value = "";
   mfaNotice.value = "";
   const code = mfaCode.value.trim();
@@ -226,7 +246,7 @@ async function turnOffMfa() {
   }
 
   mfaBusy.value = true;
-  const error = await auth.disableMfa(code);
+  const error = await auth.disableMfa(code, method);
   mfaBusy.value = false;
 
   if (error) {
@@ -235,10 +255,11 @@ async function turnOffMfa() {
     return;
   }
 
-  mfaEnabled.value = false;
   mfaCode.value = "";
   mfaCodeSent.value = false;
-  mfaNotice.value = t("profile.mfa.disabled");
+  mfaNotice.value = method && mfaEnabled.value
+    ? t("profile.mfa.methodOff")
+    : t("profile.mfa.disabled");
 }
 
 const recoveryCopied = ref(false);
@@ -264,7 +285,9 @@ async function copyRecoveryCodes() {
 }
 
 function downloadRecoveryCodes() {
-  const url = URL.createObjectURL(new Blob([recoveryCodesText()], { type: "text/plain" }));
+  const url = URL.createObjectURL(
+    new Blob([recoveryCodesText()], { type: "text/plain" }),
+  );
   const link = document.createElement("a");
   link.href = url;
   link.download = "open-sesame-recovery-codes.txt";
@@ -330,8 +353,6 @@ async function submitPassword() {
 onMounted(async () => {
   // Pick up is_verified changes made on /verify.
   await auth.fetchMe();
-  const enabled = auth.user?.mfa_enabled;
-  mfaEnabled.value = typeof enabled === "boolean" ? enabled : null;
 });
 
 // Follow profile updates, but only for fields the person hasn't started editing.
@@ -356,7 +377,10 @@ useHead({ title: () => t("titles.profile") });
 </script>
 
 <template>
-  <PageHeader :title="t('profile.title')" :description="t('profile.description')" />
+  <PageHeader
+    :title="t('profile.title')"
+    :description="t('profile.description')"
+  />
 
   <section class="dash-card">
     <div class="dash-card-header">
@@ -444,6 +468,7 @@ useHead({ title: () => t("titles.profile") });
         v-model="currentPassword"
         id="current-password"
         :label="t('profile.password.current')"
+        :placeholder="t('profile.password.currentRequired')"
         type="password"
         autocomplete="current-password"
         :error="passwordSubmitted && !currentPassword"
@@ -596,9 +621,15 @@ useHead({ title: () => t("titles.profile") });
       <div class="flex flex-wrap gap-2">
         <button type="button" class="btn btn-ghost" @click="copyRecoveryCodes">
           <AppIcon :icon="recoveryCopied ? Check : Copy" :size="16" />
-          {{ recoveryCopied ? t("clients.copied") : t("profile.mfa.copyRecovery") }}
+          {{
+            recoveryCopied ? t("clients.copied") : t("profile.mfa.copyRecovery")
+          }}
         </button>
-        <button type="button" class="btn btn-ghost" @click="downloadRecoveryCodes">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          @click="downloadRecoveryCodes"
+        >
           <AppIcon :icon="Download" :size="16" />
           {{ t("profile.mfa.downloadRecovery") }}
         </button>
@@ -612,34 +643,43 @@ useHead({ title: () => t("titles.profile") });
       </div>
     </div>
 
-    <div
-      v-if="mfaEnabled !== true && !mfaSetup && !recoveryCodes.length"
-      class="mt-4 flex flex-wrap gap-2"
+    <ul
+      v-if="enabledMethods.length && !mfaSetup && !recoveryCodes.length"
+      class="session-list mt-4"
+      :aria-label="t('profile.mfa.enabledMethods')"
     >
-      <button
-        type="button"
-        class="btn btn-primary"
-        :disabled="mfaBusy"
-        @click="startMfaSetup('totp')"
-      >
-        <span v-if="mfaBusy" class="loading loading-spinner loading-xs" />
-        {{ t("profile.mfa.setup") }}
-      </button>
-      <button
-        type="button"
-        class="btn btn-outline"
-        :disabled="mfaBusy"
-        @click="startMfaSetup('email')"
-      >
-        {{ t("profile.mfa.setupEmail") }}
-      </button>
+      <li v-for="method in enabledMethods" :key="method" class="session-row">
+        <strong>{{ t(`profile.mfa.methods.${method}`) }}</strong>
+        <span class="badge badge-sm badge-success">{{ t("profile.mfa.statusOn") }}</span>
+      </li>
+    </ul>
+
+    <div
+      v-if="addableMethods.length && !mfaSetup && !recoveryCodes.length"
+      class="mt-4 space-y-2"
+    >
+      <p v-if="mfaEnabled" class="dash-field-hint">{{ t("profile.mfa.addAnother") }}</p>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="method in addableMethods"
+          :key="method"
+          type="button"
+          class="btn"
+          :class="mfaEnabled ? 'btn-outline' : method === 'totp' ? 'btn-primary' : 'btn-outline'"
+          :disabled="mfaBusy"
+          @click="startMfaSetup(method)"
+        >
+          <span v-if="mfaBusy" class="loading loading-spinner loading-xs" />
+          {{ method === "totp" ? t("profile.mfa.setup") : t("profile.mfa.setupEmail") }}
+        </button>
+      </div>
     </div>
 
     <form
       v-if="mfaEnabled !== false && !mfaSetup && !recoveryCodes.length"
       class="dash-form mt-4"
       novalidate
-      @submit.prevent="turnOffMfa"
+      @submit.prevent="enabledMethods.length > 1 ? undefined : turnOffMfa()"
     >
       <FormField
         v-model="mfaCode"
@@ -650,11 +690,36 @@ useHead({ title: () => t("titles.profile") });
         :error="!!mfaError && !mfaCode"
       />
       <div class="dash-form-actions">
-        <button type="submit" class="btn btn-outline" :disabled="mfaBusy">
+        <button
+          v-if="enabledMethods.length <= 1"
+          type="submit"
+          class="btn btn-outline"
+          :disabled="mfaBusy"
+        >
           {{ t("profile.mfa.disable") }}
         </button>
+        <template v-else>
+          <button
+            v-for="method in enabledMethods"
+            :key="method"
+            type="button"
+            class="btn btn-outline"
+            :disabled="mfaBusy"
+            @click="turnOffMfa(method)"
+          >
+            {{ t("profile.mfa.turnOff", { method: t(`profile.mfa.methods.${method}`) }) }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline btn-error"
+            :disabled="mfaBusy"
+            @click="turnOffMfa()"
+          >
+            {{ t("profile.mfa.turnOffAll") }}
+          </button>
+        </template>
         <button
-          v-if="!usesAuthenticatorApp"
+          v-if="emailEnabled"
           type="button"
           class="btn btn-ghost"
           :disabled="mfaBusy || mfaResendCooldown > 0"

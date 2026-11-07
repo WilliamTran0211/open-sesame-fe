@@ -4,8 +4,13 @@ import type { MfaMethod } from "./mfa";
 import type { AuthUser } from "./users";
 
 // Sign-in answers with the user, or with a challenge when two-factor is on.
-// mfa_method is not sent by the API yet; when it is, the 2FA page offers only it.
-export type LoginResponse = AuthUser & { challenge_id?: string; mfa_method?: MfaMethod };
+// mfa_method is the preferred method (when it is email, the code is already sent);
+// mfa_methods lists every method the account can finish the challenge with.
+export type LoginResponse = AuthUser & {
+  challenge_id?: string;
+  mfa_method?: MfaMethod;
+  mfa_methods?: MfaMethod[];
+};
 
 // Mirrors the API's SessionResponseSchema (GET /auth/sessions).
 export type UserSession = {
@@ -27,6 +32,14 @@ export const authApi = {
     apiFetch<AuthUser>("/auth/login/2fa", {
       method: "POST",
       body: { challenge_id: challengeId, code },
+    }),
+
+  // Sends (or resends) the email code for a sign-in challenge. 204 even when the account
+  // doesn't use email; 429 while the 30-second cooldown or the 3-per-5-minutes limit applies.
+  sendLoginEmailCode: (challengeId: string) =>
+    apiFetch("/auth/login/2fa/email", {
+      method: "POST",
+      body: { challenge_id: challengeId },
     }),
 
   logout: () => apiFetch("/auth/logout", { method: "POST" }),
