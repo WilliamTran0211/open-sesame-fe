@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import QRCode from "qrcode";
-import { Check, Copy, Download } from "lucide";
-
 definePageMeta({
   layout: "dashboard",
   middleware: ["auth"],
 });
 
-import type { MfaMethod, MfaSetup } from "~/stores/auth";
 import { isValidEmail } from "~/utils/email";
 import { passwordProblem } from "~/utils/password";
 
 const PROFILE_PATH = "/dashboard/profile";
-const MFA_RESEND_COOLDOWN_SECONDS = 60;
 
 const auth = useAuthStore();
 const { t } = useI18n();
@@ -107,177 +102,6 @@ const passwordSubmitted = ref(false);
 const isSavingPassword = ref(false);
 const passwordError = ref("");
 const passwordNotice = ref("");
-const mfaEnabled = ref<boolean | null>(null);
-const mfaSetup = ref<MfaSetup | null>(null);
-const mfaQrCode = ref("");
-const mfaCode = ref("");
-const mfaError = ref("");
-const mfaNotice = ref("");
-const mfaBusy = ref(false);
-const recoveryCodes = ref<string[]>([]);
-const mfaCodeSent = ref(false);
-const { remaining: mfaResendCooldown, start: startMfaCooldown } = useCooldown(MFA_RESEND_COOLDOWN_SECONDS);
-// Only known if the profile API reports it; until then offer the email option.
-const usesAuthenticatorApp = computed(() => auth.user?.mfa_method === "totp");
-
-async function sendMfaEmailCode() {
-  if (mfaResendCooldown.value > 0) {
-    return;
-  }
-
-  mfaError.value = "";
-  mfaNotice.value = "";
-  mfaBusy.value = true;
-  const error = await auth.requestMfaCode();
-  mfaBusy.value = false;
-  startMfaCooldown();
-
-  if (error) {
-    mfaError.value = error;
-    return;
-  }
-
-  mfaCode.value = "";
-  mfaCodeSent.value = true;
-  mfaNotice.value = t("profile.mfa.emailSent", { email: auth.user?.email });
-}
-
-async function startMfaSetup(method: MfaMethod) {
-  mfaBusy.value = true;
-  mfaError.value = "";
-  mfaNotice.value = "";
-  recoveryCodes.value = [];
-
-  const result = await auth.setupMfa(method);
-  if (result.error || !result.setup) {
-    mfaError.value = result.error || t("profile.mfa.errors.setup");
-    mfaBusy.value = false;
-    return;
-  }
-
-  mfaSetup.value = result.setup;
-
-  if (result.setup.method === "email") {
-    // The API already emailed the first code.
-    mfaBusy.value = false;
-    startMfaCooldown();
-    return;
-  }
-
-  try {
-    mfaQrCode.value = await QRCode.toDataURL(result.setup.provisioning_uri || "", {
-      errorCorrectionLevel: "M",
-      margin: 2,
-      width: 240,
-    });
-  } catch {
-    mfaError.value = t("profile.mfa.errors.qr");
-  } finally {
-    mfaBusy.value = false;
-  }
-}
-
-async function enableMfa() {
-  mfaError.value = "";
-  mfaNotice.value = "";
-
-  if (!/^\d{6}$/.test(mfaCode.value)) {
-    mfaError.value = t("profile.mfa.errors.code");
-    return;
-  }
-
-  mfaBusy.value = true;
-  const result = await auth.confirmMfa(mfaCode.value);
-  mfaBusy.value = false;
-
-  if (result.error) {
-    mfaError.value = result.error;
-    mfaCode.value = "";
-    return;
-  }
-
-  mfaEnabled.value = true;
-  recoveryCodes.value = result.recoveryCodes;
-  mfaSetup.value = null;
-  mfaQrCode.value = "";
-  mfaCode.value = "";
-  mfaCodeSent.value = false;
-}
-
-function cancelMfaSetup() {
-  mfaSetup.value = null;
-  mfaQrCode.value = "";
-  mfaCode.value = "";
-  mfaError.value = "";
-  mfaNotice.value = "";
-}
-
-// A 6-digit app or email code, or one of the 10-character recovery codes.
-const DISABLE_CODE_PATTERN = /^(\d{6}|[A-Za-z0-9_-]{10})$/;
-
-async function turnOffMfa() {
-  mfaError.value = "";
-  mfaNotice.value = "";
-  const code = mfaCode.value.trim();
-
-  if (!DISABLE_CODE_PATTERN.test(code)) {
-    mfaError.value = t("profile.mfa.errors.disableCode");
-    return;
-  }
-
-  mfaBusy.value = true;
-  const error = await auth.disableMfa(code);
-  mfaBusy.value = false;
-
-  if (error) {
-    mfaError.value = error;
-    mfaCode.value = "";
-    return;
-  }
-
-  mfaEnabled.value = false;
-  mfaCode.value = "";
-  mfaCodeSent.value = false;
-  mfaNotice.value = t("profile.mfa.disabled");
-}
-
-const recoveryCopied = ref(false);
-
-function recoveryCodesText() {
-  return [
-    t("profile.mfa.recoveryFileHeading", { email: auth.user?.email ?? "" }),
-    t("profile.mfa.recoveryFileNote"),
-    "",
-    ...recoveryCodes.value,
-    "",
-  ].join("\n");
-}
-
-async function copyRecoveryCodes() {
-  try {
-    await navigator.clipboard.writeText(recoveryCodes.value.join("\n"));
-    recoveryCopied.value = true;
-    window.setTimeout(() => (recoveryCopied.value = false), 2000);
-  } catch {
-    // Clipboard refused (permissions); the codes stay on screen to copy by hand.
-  }
-}
-
-function downloadRecoveryCodes() {
-  const url = URL.createObjectURL(new Blob([recoveryCodesText()], { type: "text/plain" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "open-sesame-recovery-codes.txt";
-  link.click();
-  // Revoking in the same tick can cancel the download in some browsers.
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-function dismissRecoveryCodes() {
-  recoveryCodes.value = [];
-  mfaNotice.value = t("profile.mfa.enabled");
-}
-
 const newPasswordError = computed(() => {
   if (!passwordSubmitted.value) return "";
   const problem = passwordProblem(newPassword.value, fullName.value);
@@ -330,8 +154,6 @@ async function submitPassword() {
 onMounted(async () => {
   // Pick up is_verified changes made on /verify.
   await auth.fetchMe();
-  const enabled = auth.user?.mfa_enabled;
-  mfaEnabled.value = typeof enabled === "boolean" ? enabled : null;
 });
 
 // Follow profile updates, but only for fields the person hasn't started editing.
@@ -356,7 +178,10 @@ useHead({ title: () => t("titles.profile") });
 </script>
 
 <template>
-  <PageHeader :title="t('profile.title')" :description="t('profile.description')" />
+  <PageHeader
+    :title="t('profile.title')"
+    :description="t('profile.description')"
+  />
 
   <section class="dash-card">
     <div class="dash-card-header">
@@ -444,6 +269,7 @@ useHead({ title: () => t("titles.profile") });
         v-model="currentPassword"
         id="current-password"
         :label="t('profile.password.current')"
+        :placeholder="t('profile.password.currentRequired')"
         type="password"
         autocomplete="current-password"
         :error="passwordSubmitted && !currentPassword"
@@ -498,186 +324,7 @@ useHead({ title: () => t("titles.profile") });
     </form>
   </section>
 
-  <section class="dash-card">
-    <div class="dash-card-header">
-      <h2 class="dash-card-title">{{ t("profile.mfa.title") }}</h2>
-      <span
-        class="badge badge-sm"
-        :class="mfaEnabled ? 'badge-success' : 'badge-neutral'"
-      >
-        {{
-          mfaEnabled === null
-            ? t("profile.mfa.statusUnknown")
-            : mfaEnabled
-              ? t("profile.mfa.statusOn")
-              : t("profile.mfa.statusOff")
-        }}
-      </span>
-    </div>
-    <p class="dash-field-hint">{{ t("profile.mfa.description") }}</p>
-    <p v-if="mfaEnabled === null" class="dash-field-hint">
-      {{ t("profile.mfa.statusHint") }}
-    </p>
-
-    <div v-if="mfaSetup" class="mt-4 space-y-4">
-      <template v-if="mfaSetup.method === 'totp'">
-        <p>{{ t("profile.mfa.scan") }}</p>
-        <img
-          v-if="mfaQrCode"
-          :src="mfaQrCode"
-          :alt="t('profile.mfa.qrAlt')"
-          width="240"
-          height="240"
-          class="rounded bg-white p-3"
-        />
-        <div>
-          <p class="dash-field-hint">{{ t("profile.mfa.manual") }}</p>
-          <code class="break-all select-all">{{ mfaSetup.secret }}</code>
-        </div>
-      </template>
-      <p v-else>
-        {{ t("profile.mfa.emailSetup", { email: auth.user?.email }) }}
-      </p>
-      <form class="dash-form" novalidate @submit.prevent="enableMfa">
-        <OtpInput
-          v-model="mfaCode"
-          id="mfa-enable-code"
-          :label="
-            mfaSetup.method === 'email'
-              ? t('profile.mfa.emailCode')
-              : t('profile.mfa.code')
-          "
-          :error="!!mfaError && !mfaCode"
-        />
-        <div class="dash-form-actions">
-          <button type="submit" class="btn btn-primary" :disabled="mfaBusy">
-            <span v-if="mfaBusy" class="loading loading-spinner loading-xs" />
-            {{ t("profile.mfa.confirm") }}
-          </button>
-          <button
-            v-if="mfaSetup.method === 'email'"
-            type="button"
-            class="btn btn-ghost"
-            :disabled="mfaBusy || mfaResendCooldown > 0"
-            @click="sendMfaEmailCode"
-          >
-            {{
-              mfaResendCooldown > 0
-                ? t("auth.verify.resendIn", { seconds: mfaResendCooldown })
-                : t("auth.verify.resend")
-            }}
-          </button>
-          <button
-            type="button"
-            class="btn btn-ghost"
-            :disabled="mfaBusy"
-            @click="cancelMfaSetup"
-          >
-            {{ t("profile.mfa.cancel") }}
-          </button>
-        </div>
-      </form>
-    </div>
-
-    <div v-if="recoveryCodes.length" class="mt-4 space-y-3" role="status">
-      <h3 class="font-semibold">{{ t("profile.mfa.recoveryTitle") }}</h3>
-      <p class="dash-field-hint">
-        {{ t("profile.mfa.recoveryDescription") }}
-      </p>
-      <ul class="grid grid-cols-2 gap-2 font-mono text-sm">
-        <li
-          v-for="recoveryCode in recoveryCodes"
-          :key="recoveryCode"
-          class="rounded border border-base-300 px-3 py-2"
-        >
-          {{ recoveryCode }}
-        </li>
-      </ul>
-      <div class="flex flex-wrap gap-2">
-        <button type="button" class="btn btn-ghost" @click="copyRecoveryCodes">
-          <AppIcon :icon="recoveryCopied ? Check : Copy" :size="16" />
-          {{ recoveryCopied ? t("clients.copied") : t("profile.mfa.copyRecovery") }}
-        </button>
-        <button type="button" class="btn btn-ghost" @click="downloadRecoveryCodes">
-          <AppIcon :icon="Download" :size="16" />
-          {{ t("profile.mfa.downloadRecovery") }}
-        </button>
-        <button
-          type="button"
-          class="btn btn-primary"
-          @click="dismissRecoveryCodes"
-        >
-          {{ t("profile.mfa.closeRecovery") }}
-        </button>
-      </div>
-    </div>
-
-    <div
-      v-if="mfaEnabled !== true && !mfaSetup && !recoveryCodes.length"
-      class="mt-4 flex flex-wrap gap-2"
-    >
-      <button
-        type="button"
-        class="btn btn-primary"
-        :disabled="mfaBusy"
-        @click="startMfaSetup('totp')"
-      >
-        <span v-if="mfaBusy" class="loading loading-spinner loading-xs" />
-        {{ t("profile.mfa.setup") }}
-      </button>
-      <button
-        type="button"
-        class="btn btn-outline"
-        :disabled="mfaBusy"
-        @click="startMfaSetup('email')"
-      >
-        {{ t("profile.mfa.setupEmail") }}
-      </button>
-    </div>
-
-    <form
-      v-if="mfaEnabled !== false && !mfaSetup && !recoveryCodes.length"
-      class="dash-form mt-4"
-      novalidate
-      @submit.prevent="turnOffMfa"
-    >
-      <FormField
-        v-model="mfaCode"
-        id="mfa-disable-code"
-        :label="t('profile.mfa.disableCode')"
-        autocomplete="one-time-code"
-        :placeholder="t('profile.mfa.codePlaceholder')"
-        :error="!!mfaError && !mfaCode"
-      />
-      <div class="dash-form-actions">
-        <button type="submit" class="btn btn-outline" :disabled="mfaBusy">
-          {{ t("profile.mfa.disable") }}
-        </button>
-        <button
-          v-if="!usesAuthenticatorApp"
-          type="button"
-          class="btn btn-ghost"
-          :disabled="mfaBusy || mfaResendCooldown > 0"
-          @click="sendMfaEmailCode"
-        >
-          {{
-            mfaResendCooldown > 0
-              ? t("auth.verify.resendIn", { seconds: mfaResendCooldown })
-              : mfaCodeSent
-                ? t("auth.verify.resend")
-                : t("profile.mfa.sendEmailCode")
-          }}
-        </button>
-      </div>
-    </form>
-
-    <AlertMessage v-if="mfaError" class="mt-4">
-      {{ mfaError }}
-    </AlertMessage>
-    <AlertMessage v-else-if="mfaNotice" tone="success" class="mt-4">
-      {{ mfaNotice }}
-    </AlertMessage>
-  </section>
+  <TwoFactorSettings />
 
   <ActiveSessions />
 

@@ -11,14 +11,13 @@ definePageMeta({
   ],
 });
 
-import { ChevronRight, KeyRound, Mail, Smartphone } from "lucide";
+import {
+  DEFAULT_RETRY_AFTER,
+  LOGIN_EMAIL_COOLDOWN,
+  MFA_CODE_PATTERN,
+  normalizeMfaCode,
+} from "~/utils/mfa";
 import { resolveLoginRedirect } from "~/utils/oauth";
-
-type Method = "totp" | "email" | "recovery";
-
-const METHOD_ICONS = { totp: Smartphone, email: Mail, recovery: KeyRound };
-// Recovery codes are 10 characters; app and email codes are 6 digits.
-const RECOVERY_CODE_PATTERN = /^[A-Za-z0-9_-]{10}$/;
 
 const auth = useAuthStore();
 const afterSignIn = useAfterSignIn();
@@ -26,50 +25,100 @@ const route = useRoute();
 const config = useRuntimeConfig();
 const { t } = useI18n();
 
-// When the API says which method the account uses, only offer that one
-// (plus recovery codes); otherwise let people pick.
-const methods = computed<Method[]>(() =>
-  auth.mfaMethod ? [auth.mfaMethod, "recovery"] : ["totp", "email", "recovery"],
+// One box takes an app code, an emailed code or a recovery code. Older APIs don't list the
+// methods; fall back to the one preferred method so the page still reads right.
+const methods = computed(() =>
+  auth.mfaMethods.length ? auth.mfaMethods : auth.mfaMethod ? [auth.mfaMethod] : [],
 );
-const method = ref<Method | null>(null);
+const hasTotp = computed(() => methods.value.includes("totp"));
+const hasEmail = computed(() => methods.value.includes("email"));
+const description = computed(() => {
+  if (hasTotp.value && hasEmail.value) {
+    return t("auth.mfa.descriptionBoth");
+  }
+
+  return hasEmail.value
+    ? t("auth.mfa.descriptionEmail")
+    : t("auth.mfa.descriptionTotp");
+});
+
 const code = ref("");
 const submitted = ref(false);
-const redirect = computed(() =>
-  resolveLoginRedirect(route.query, config.public.apiBaseUrl),
-);
+// Sign-in already emailed a code when email was the preferred method.
+const emailSent = ref(auth.mfaMethod === "email");
+const notice = ref<"" | "sent" | "resent">(auth.mfaMethod === "email" ? "sent" : "");
+const { remaining: emailCooldown, start: startEmailCooldown } = useCooldown(LOGIN_EMAIL_COOLDOWN);
+const { remaining: submitCooldown, start: startSubmitCooldown } = useCooldown(DEFAULT_RETRY_AFTER);
 
-const isRecovery = computed(() => method.value === "recovery");
-const codeValid = computed(() =>
-  isRecovery.value
-    ? RECOVERY_CODE_PATTERN.test(code.value.trim())
-    : /^\d{6}$/.test(code.value),
-);
-const title = computed(() =>
-  method.value ? t(`auth.mfa.steps.${method.value}.title`) : t("auth.mfa.title"),
-);
-const description = computed(() =>
-  method.value
-    ? t(`auth.mfa.steps.${method.value}.description`)
-    : t("auth.mfa.choose"),
-);
+const returnTo = computed(() => {
+  const value = Array.isArray(route.query.redirect) ? route.query.redirect[0] : route.query.redirect;
+  return value || undefined;
+});
+const redirect = computed(() => resolveLoginRedirect(route.query, config.public.apiBaseUrl));
+const codeValid = computed(() => MFA_CODE_PATTERN.test(normalizeMfaCode(code.value)));
 
-function choose(next: Method | null) {
-  method.value = next;
-  code.value = "";
-  submitted.value = false;
+function focusCode() {
+  nextTick(() => document.getElementById("mfa-code")?.focus());
+}
+
+// Back to the password step, with a note on why.
+function backToSignIn(reason: "expired" | "gone") {
+  return navigateTo({ path: "/login", query: { mfa: reason, redirect: returnTo.value } });
+}
+
+async function sendEmailCode() {
   auth.error = "";
+  notice.value = "";
+  const result = await auth.sendLoginEmailCode();
+
+  if (result.expired) {
+    await backToSignIn("expired");
+    return;
+  }
+
+  if (result.error) {
+    auth.error = result.error;
+    return;
+  }
+
+  if (result.retryAfter) {
+    startEmailCooldown(result.retryAfter);
+  }
+
+  emailSent.value = true;
+  notice.value = result.sent ? "resent" : "";
 }
 
 async function verify() {
   submitted.value = true;
-  if (!codeValid.value || auth.isLoading) {
+  notice.value = "";
+
+  if (!codeValid.value || auth.isLoading || submitCooldown.value > 0) {
     return;
   }
 
-  if (await auth.verifyMfaLogin(code.value)) {
+  const { result, retryAfter } = await auth.verifyMfaLogin(code.value);
+
+  if (result === "ok") {
     await afterSignIn(redirect.value);
+  } else if (result === "expired" || result === "gone") {
+    await backToSignIn(result);
+  } else if (result === "rate_limited") {
+    startSubmitCooldown(retryAfter ?? DEFAULT_RETRY_AFTER);
+  } else {
+    // A wrong code: clear the box so the next one starts clean.
+    code.value = "";
+    submitted.value = false;
+    focusCode();
   }
 }
+
+onMounted(() => {
+  // The login email counts toward the API's 30-second wait.
+  if (emailSent.value) {
+    startEmailCooldown();
+  }
+});
 
 useHead({ title: () => t("titles.mfa") });
 </script>
@@ -77,64 +126,55 @@ useHead({ title: () => t("titles.mfa") });
 <template>
   <AuthPanel
     heading-id="mfa-title"
-    :title="title"
+    :title="t('auth.mfa.title')"
     :description="description"
     :loading="auth.isLoading"
   >
-    <ul v-if="!method" class="mfa-methods">
-      <li v-for="option in methods" :key="option">
-        <button type="button" class="mfa-method" @click="choose(option)">
-          <span class="mfa-method-icon">
-            <AppIcon :icon="METHOD_ICONS[option]" :size="18" />
-          </span>
-          <span class="mfa-method-text">
-            <strong>{{ t(`auth.mfa.methods.${option}.label`) }}</strong>
-            <small>{{ t(`auth.mfa.methods.${option}.hint`) }}</small>
-          </span>
-          <AppIcon :icon="ChevronRight" class="mfa-method-caret" :size="16" />
-        </button>
-      </li>
-    </ul>
-
-    <form v-else class="auth-form" @submit.prevent="verify">
-      <AlertMessage v-if="auth.error">
+    <form class="auth-form" novalidate @submit.prevent="verify">
+      <AlertMessage v-if="submitCooldown > 0" tone="warning">
+        {{ t("auth.mfa.rateLimited", { seconds: submitCooldown }) }}
+      </AlertMessage>
+      <AlertMessage v-else-if="auth.error">
         {{ auth.error }}
+      </AlertMessage>
+      <AlertMessage v-else-if="notice === 'sent'" tone="success">
+        {{ t("auth.mfa.emailSent") }}
+      </AlertMessage>
+      <AlertMessage v-else-if="notice === 'resent'" tone="success">
+        {{ t("auth.verify.resent") }}
       </AlertMessage>
 
       <FormField
-        v-if="isRecovery"
-        v-model="code"
-        id="mfa-code"
-        :label="t('auth.mfa.methods.recovery.label')"
-        autocomplete="off"
-        placeholder="xxxxxxxxxx"
-        :error="submitted && !codeValid"
-        :error-message="t('auth.errors.recoveryCodeInvalid')"
-      />
-      <OtpInput
-        v-else
         v-model="code"
         id="mfa-code"
         :label="t('auth.mfa.code')"
+        autocomplete="one-time-code"
+        :placeholder="t('auth.mfa.codePlaceholder')"
         :error="submitted && !codeValid"
-        :error-message="t('auth.errors.mfaCodeRequired')"
+        :error-message="t('auth.errors.mfaCodeInvalid')"
       />
+      <p class="dash-field-hint">{{ t("auth.mfa.recoveryHint") }}</p>
 
       <SubmitButton :loading="auth.isLoading">
         {{ t("auth.mfa.submit") }}
       </SubmitButton>
-
-      <button type="button" class="mfa-switch" @click="choose(null)">
-        {{ t("auth.mfa.otherMethod") }}
-      </button>
     </form>
 
-    <!-- The API emails a new code with each sign-in; there is no resend for a challenge. -->
-    <p v-if="method === 'email'" class="help-text">
-      {{ t("auth.mfa.noEmail") }}
-      <NuxtLink :to="{ path: '/login', query: { redirect: route.query.redirect } }">
-        {{ t("auth.mfa.signInAgain") }}
-      </NuxtLink>
+    <p v-if="hasEmail" class="help-text">
+      <button
+        type="button"
+        class="link link-primary no-underline hover:underline disabled:no-underline disabled:opacity-60"
+        :disabled="emailCooldown > 0 || auth.isLoading"
+        @click="sendEmailCode"
+      >
+        {{
+          emailCooldown > 0
+            ? t("auth.verify.resendIn", { seconds: emailCooldown })
+            : emailSent
+              ? t("auth.verify.resend")
+              : t("auth.mfa.sendEmail")
+        }}
+      </button>
     </p>
   </AuthPanel>
 </template>

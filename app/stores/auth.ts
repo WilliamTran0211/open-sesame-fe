@@ -1,14 +1,17 @@
 import { defineStore } from "pinia";
 import { authApi, type LoginResponse } from "~/services/auth";
-import { mfaApi, type MfaMethod } from "~/services/mfa";
+import type { MfaMethod } from "~/services/mfa";
 import { usersApi, type AuthUser } from "~/services/users";
 import {
   apiErrorMessage,
   getErrorStatus,
+  getRetryAfter,
+  isApiError,
   tryApi,
   type ApiError,
 } from "~/utils/api";
 import { isValidEmail } from "~/utils/email";
+import { DEFAULT_RETRY_AFTER, LOGIN_EMAIL_COOLDOWN, normalizeMfaCode } from "~/utils/mfa";
 import { passwordProblem } from "~/utils/password";
 
 // API shapes live with their endpoints; re-exported here for existing imports.
@@ -20,6 +23,15 @@ const PENDING_EMAIL_KEY = "open-sesame-pending-email";
 
 type SignInResult = "success" | "mfa_required" | "unverified" | "failed";
 
+// What happened to a sign-in code; the page decides where to go next.
+export type MfaLoginResult =
+  | "ok"
+  | "wrong_code"
+  | "expired" // challenge older than 5 minutes, or more than 5 wrong codes
+  | "gone" // the account was deactivated
+  | "rate_limited"
+  | "failed";
+
 function getChallengeId(value: unknown) {
   const challengeId = (value as LoginResponse | undefined)?.challenge_id;
   return typeof challengeId === "string" && challengeId ? challengeId : null;
@@ -28,6 +40,13 @@ function getChallengeId(value: unknown) {
 function getChallengeMethod(value: unknown): MfaMethod | null {
   const method = (value as LoginResponse | undefined)?.mfa_method;
   return method === "totp" || method === "email" ? method : null;
+}
+
+function getChallengeMethods(value: unknown): MfaMethod[] {
+  const methods = (value as LoginResponse | undefined)?.mfa_methods;
+  return Array.isArray(methods)
+    ? methods.filter((method) => method === "totp" || method === "email")
+    : [];
 }
 
 function getDisplayName(user: Partial<AuthUser> | null | undefined) {
@@ -55,8 +74,10 @@ export const useAuthStore = defineStore("auth", () => {
     "auth.mfaChallengeId",
     () => null,
   );
-  // The account's two-factor method, when the API says which one it is.
+  // The method the API picked for this sign-in (when it is email, the code is already sent),
+  // and every method the account can use, preferred first. Empty when the API doesn't say.
   const mfaMethod = useState<MfaMethod | null>("auth.mfaMethod", () => null);
+  const mfaMethods = useState<MfaMethod[]>("auth.mfaMethods", () => []);
   const isAuthenticated = computed(() => !!user.value);
   const pendingEmail = useState<string>("auth.pendingEmail", () => {
     if (import.meta.client) {
@@ -142,6 +163,7 @@ export const useAuthStore = defineStore("auth", () => {
     error.value = "";
     mfaChallengeId.value = null;
     mfaMethod.value = null;
+    mfaMethods.value = [];
 
     if (!email || !password) {
       error.value = t("auth.errors.signInRequired");
@@ -162,6 +184,7 @@ export const useAuthStore = defineStore("auth", () => {
       if (challengeId) {
         mfaChallengeId.value = challengeId;
         mfaMethod.value = getChallengeMethod(loginResponse);
+        mfaMethods.value = getChallengeMethods(loginResponse);
         isLoading.value = false;
         return "mfa_required";
       }
@@ -180,6 +203,9 @@ export const useAuthStore = defineStore("auth", () => {
       if (challengeId) {
         mfaChallengeId.value = challengeId;
         mfaMethod.value = getChallengeMethod(
+          (requestError as { data?: LoginResponse })?.data,
+        );
+        mfaMethods.value = getChallengeMethods(
           (requestError as { data?: LoginResponse })?.data,
         );
         return "mfa_required";
@@ -202,72 +228,105 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
-  async function verifyMfaLogin(code: string) {
+  async function verifyMfaLogin(
+    code: string,
+  ): Promise<{ result: MfaLoginResult; retryAfter: number | null }> {
     error.value = "";
     const challengeId = mfaChallengeId.value;
+    const normalized = normalizeMfaCode(code);
 
-    if (!challengeId || !code.trim()) {
+    if (!challengeId || !normalized) {
       error.value = t("auth.errors.mfaCodeRequired");
-      return false;
+      return { result: "failed", retryAfter: null };
     }
 
     isLoading.value = true;
     try {
-      await authApi.verifyLoginCode(challengeId, code.trim());
+      await authApi.verifyLoginCode(challengeId, normalized);
 
       mfaChallengeId.value = null;
       clearPendingEmail();
-      return !!(await fetchMe());
+      const profile = await fetchMe();
+      return { result: profile ? "ok" : "failed", retryAfter: null };
     } catch (requestError) {
-      // invalid_grant: the challenge expired or ran out of attempts; a new sign-in is needed.
-      const expired =
-        (requestError as { data?: ApiError })?.data?.error === "invalid_grant";
-      error.value = apiErrorMessage(
-        requestError,
-        expired ? "auth.errors.mfaExpired" : "auth.errors.mfaVerify",
-        expired ? { 400: "auth.errors.mfaExpired" } : { 400: "auth.errors.mfaWrongCode" },
-      );
-      return false;
+      const status = getErrorStatus(requestError);
+
+      if (isApiError(requestError, "invalid_grant")) {
+        clearChallenge();
+        return { result: "expired", retryAfter: null };
+      }
+
+      if (status === 404) {
+        clearChallenge();
+        return { result: "gone", retryAfter: null };
+      }
+
+      if (status === 429) {
+        error.value = t("common.errors.rateLimited");
+        return {
+          result: "rate_limited",
+          retryAfter: getRetryAfter(requestError) ?? DEFAULT_RETRY_AFTER,
+        };
+      }
+
+      if (isApiError(requestError, "validation_error", "Invalid authentication code")) {
+        error.value = t("auth.errors.mfaWrongCode");
+        return { result: "wrong_code", retryAfter: null };
+      }
+
+      error.value = apiErrorMessage(requestError, "auth.errors.mfaVerify");
+      return { result: "failed", retryAfter: null };
     } finally {
       isLoading.value = false;
     }
   }
 
-  async function setupMfa(method: MfaMethod) {
-    const { data, error: setupError } = await tryApi(
-      () => mfaApi.setup(method),
-      "profile.mfa.errors.setup",
-    );
-
-    return { setup: data, error: setupError };
+  function clearChallenge() {
+    mfaChallengeId.value = null;
+    mfaMethod.value = null;
+    mfaMethods.value = [];
   }
 
-  async function confirmMfa(code: string) {
-    const { data, error: confirmError } = await tryApi(
-      () => mfaApi.confirm(code),
-      "profile.mfa.errors.confirm",
-    );
+  // Asks the API to email the sign-in code. Waits come from Retry-After on a 429:
+  // the API allows one email per challenge every 30 s and 3 per 5 minutes.
+  async function sendLoginEmailCode(): Promise<{
+    sent: boolean;
+    error: string | null;
+    retryAfter: number | null;
+    expired: boolean;
+  }> {
+    const challengeId = mfaChallengeId.value;
 
-    return { recoveryCodes: data?.recovery_codes ?? [], error: confirmError };
-  }
+    if (!challengeId) {
+      return { sent: false, error: null, retryAfter: null, expired: true };
+    }
 
-  async function requestMfaCode() {
-    const result = await tryApi(
-      () => mfaApi.requestCode(),
-      "profile.mfa.errors.sendCode",
-      { 429: "auth.errors.resendLimited" },
-    );
+    try {
+      await authApi.sendLoginEmailCode(challengeId);
+      return { sent: true, error: null, retryAfter: LOGIN_EMAIL_COOLDOWN, expired: false };
+    } catch (requestError) {
+      if (isApiError(requestError, "invalid_grant")) {
+        clearChallenge();
+        return { sent: false, error: null, retryAfter: null, expired: true };
+      }
 
-    return result.error;
-  }
+      // Rate limited: a code went out a moment ago, so only the wait is news.
+      if (getErrorStatus(requestError) === 429) {
+        return {
+          sent: false,
+          error: null,
+          retryAfter: getRetryAfter(requestError) ?? LOGIN_EMAIL_COOLDOWN,
+          expired: false,
+        };
+      }
 
-  async function disableMfa(code: string) {
-    const result = await tryApi(
-      () => mfaApi.disable(code),
-      "profile.mfa.errors.disable",
-    );
-
-    return result.error;
+      return {
+        sent: false,
+        error: apiErrorMessage(requestError, "auth.mfa.errors.sendCode"),
+        retryAfter: null,
+        expired: false,
+      };
+    }
   }
 
   async function register(
@@ -476,11 +535,9 @@ export const useAuthStore = defineStore("auth", () => {
     signIn,
     mfaChallengeId,
     mfaMethod,
+    mfaMethods,
     verifyMfaLogin,
-    setupMfa,
-    confirmMfa,
-    requestMfaCode,
-    disableMfa,
+    sendLoginEmailCode,
     fetchMe,
     ensureSession,
     register,

@@ -16,6 +16,10 @@ const justVerified = computed(() => route.query.verified === "1");
 const justReset = computed(() => route.query.reset === "1");
 // Set by apiFetch when a signed-in request came back 401.
 const sessionExpired = computed(() => route.query.expired === "1");
+// Set by the 2FA page when the sign-in has to start over.
+const mfaReason = computed(() =>
+  route.query.mfa === "expired" || route.query.mfa === "gone" ? route.query.mfa : null,
+);
 const resetEmail = useState<string>("auth.resetEmail", () => "");
 // Set when sign-in was triggered by a protected page or an OAuth authorize request.
 const returnTo = computed(() =>
@@ -84,6 +88,10 @@ useHead({ title: () => t("titles.signIn") });
 
       <AlertMessage v-else-if="sessionExpired" tone="warning">
         {{ t("auth.login.expired") }}
+      </AlertMessage>
+
+      <AlertMessage v-else-if="mfaReason" tone="warning">
+        {{ t(`auth.login.mfa.${mfaReason}`) }}
       </AlertMessage>
 
       <FormField

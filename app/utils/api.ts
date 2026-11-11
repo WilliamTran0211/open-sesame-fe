@@ -42,6 +42,31 @@ export function getErrorStatus(error: unknown) {
   return (error as { response?: { status?: number } })?.response?.status;
 }
 
+// Seconds from a 429's Retry-After header, or null. Browsers only expose the header to
+// cross-origin pages when the API lists it in Access-Control-Expose-Headers.
+export function getRetryAfter(error: unknown): number | null {
+  const headers = (error as { response?: { headers?: { get?: (name: string) => string | null } } })
+    ?.response?.headers;
+  const value = headers?.get?.("retry-after");
+
+  if (!value || !/^\d+$/.test(value)) {
+    return null;
+  }
+
+  const seconds = Number(value);
+  return seconds > 0 ? seconds : null;
+}
+
+// True when the API answered with this `error` code (and, when given, exactly this description).
+export function isApiError(error: unknown, code: string, description?: string) {
+  const data = (error as { data?: ApiError })?.data;
+
+  return (
+    data?.error === code &&
+    (description === undefined || data?.error_description === description)
+  );
+}
+
 // A 401 while signed in means the session ended (expired or revoked elsewhere):
 // forget the user and send them to sign in, then back to where they were.
 // Signed-out flows (a wrong password, say) also get 401s and handle those themselves.

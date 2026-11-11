@@ -117,6 +117,10 @@
       "title": "Open the door!",
       "description": "Sign in to continue to your workspace.",
       "expired": "Your session ended. Sign in again to pick up where you left off.",
+      "mfa": {
+        "expired": "Your sign-in timed out. Enter your password again.",
+        "gone": "This account is no longer active."
+      },
       "passwordPlaceholder": "Enter your password",
       "forgot": "Forgot password?",
       "submit": "Continue",
@@ -153,22 +157,19 @@
     "createAccount": "Create account",
     "mfa": {
       "title": "Verify it's you.",
-      "choose": "How do you want to confirm this sign-in?",
-      "methods": {
-        "totp": { "label": "Authenticator app", "hint": "6-digit code from your app" },
-        "email": { "label": "Email code", "hint": "6-digit code sent to your inbox" },
-        "recovery": { "label": "Recovery code", "hint": "One of your saved backup codes" }
-      },
-      "steps": {
-        "totp": { "title": "Enter your app code", "description": "Open your authenticator app." },
-        "email": { "title": "Check your email", "description": "The code expires in 5 minutes." },
-        "recovery": { "title": "Use a recovery code", "description": "Each code works once." }
-      },
-      "code": "6-digit code",
+      "descriptionTotp": "Enter the code from your authenticator app.",
+      "descriptionEmail": "Enter the code we sent to your email.",
+      "descriptionBoth": "Enter the code from your authenticator app, or get one by email.",
+      "code": "Code",
+      "codePlaceholder": "123456 or recovery code",
+      "recoveryHint": "Lost access? Use one of your recovery codes.",
       "submit": "Verify",
-      "otherMethod": "Use another method",
-      "noEmail": "No email?",
-      "signInAgain": "Sign in again"
+      "sendEmail": "Send code by email",
+      "emailSent": "We sent a code to your email.",
+      "rateLimited": "Too many attempts. Try again in {seconds}s.",
+      "errors": {
+        "sendCode": "Couldn't send the code. Try again in a moment."
+      }
     },
     "showPassword": "Show password",
     "hidePassword": "Hide password",
@@ -219,10 +220,9 @@
       "resend": "Unable to resend the code. Please try again.",
       "resendLimited": "Too many codes requested. Try again in an hour.",
       "profile": "Unable to load your profile.",
-      "mfaCodeRequired": "Enter the 6-digit code.",
-      "recoveryCodeInvalid": "Recovery codes are 10 characters.",
+      "mfaCodeRequired": "Enter the code.",
+      "mfaCodeInvalid": "Enter the 6-digit code, or a 10-character recovery code.",
       "mfaWrongCode": "That code didn't work. Check it and try again.",
-      "mfaExpired": "This sign-in has expired. Sign in again.",
       "mfaVerify": "Unable to verify your code. Please try again."
     }
   },
@@ -525,26 +525,48 @@
     },
     "mfa": {
       "title": "Two-factor authentication",
-      "description": "Add an extra layer of security with an authenticator app or codes sent to your email.",
-      "statusOn": "Enabled",
-      "statusOff": "Not enabled",
-      "statusUnknown": "Status unknown",
-      "statusHint": "The profile API does not report MFA status yet. You can set it up or try disabling it with a current code.",
-      "setup": "Use authenticator app",
-      "setupEmail": "Use email codes",
-      "emailSetup": "We sent a 6-digit code to {email}. Enter it to turn on two-factor authentication.",
-      "emailCode": "6-digit code from your email",
-      "emailSent": "A new code was sent to {email}.",
-      "sendEmailCode": "Email me a code",
+      "description": "Add an extra layer of security with an authenticator app or codes sent to your email. You can use both.",
+      "statusOn": "On",
+      "statusOff": "Off",
+      "methods": {
+        "totp": "Authenticator app",
+        "email": "Email codes"
+      },
+      "hints": {
+        "totp": "Codes from an app such as Google Authenticator or 1Password.",
+        "email": "A 6-digit code sent to your email."
+      },
+      "turnOn": "Turn on",
+      "turnOff": "Turn off",
+      "turnOnLabel": "Turn on {method}",
+      "turnOffLabel": "Turn off {method}",
       "cancel": "Cancel",
-      "confirm": "Verify and enable",
-      "disable": "Disable two-factor authentication",
-      "disableCode": "Authenticator code, email code or a recovery code",
-      "codePlaceholder": "123456",
-      "scan": "Scan this QR code with your authenticator app.",
-      "qrAlt": "Authenticator setup QR code",
-      "manual": "Can't scan? Enter this setup key manually:",
-      "code": "6-digit authenticator code",
+      "setup": {
+        "scan": "Scan this QR code with your authenticator app.",
+        "qrAlt": "Authenticator setup QR code",
+        "manual": "Can't scan? Enter this setup key manually:",
+        "qrValid": "The QR code is valid for 5 minutes.",
+        "newQr": "Get a new QR code",
+        "emailIntro": "We sent a 6-digit code to {email}. It expires in 2 minutes.",
+        "appCode": "6-digit code from your app",
+        "emailCode": "6-digit code from your email",
+        "confirm": "Verify and turn on"
+      },
+      "disable": {
+        "intro": "We sent a 6-digit code to {email}. It expires in 5 minutes. Turning off any method needs an emailed code, even for your authenticator app.",
+        "code": "6-digit code from your email",
+        "sent": "A new code was sent to {email}.",
+        "confirm": "Turn off",
+        "confirmLast": "Turn off two-factor",
+        "lastWarning": "This turns two-factor off completely and deletes your recovery codes.",
+        "dialogTitle": "Turn off two-factor?",
+        "dialogMessage": "Your account will only need a password to sign in, and your recovery codes will stop working. Continue?",
+        "done": "{method} turned off.",
+        "allOff": "Two-factor is off."
+      },
+      "emailSent": "A new code was sent to {email}.",
+      "methodAdded": "Method turned on. Your existing recovery codes still work.",
+      "enabled": "Two-factor authentication is on.",
       "recoveryTitle": "Save your recovery codes",
       "recoveryDescription": "Each code can be used once if you lose access to your authenticator app or email. They are shown only now.",
       "closeRecovery": "I saved these codes",
@@ -552,17 +574,18 @@
       "downloadRecovery": "Download .txt",
       "recoveryFileHeading": "Open Sesame recovery codes for {email}",
       "recoveryFileNote": "Each code works once. Keep this file somewhere only you can open.",
-      "enabled": "Two-factor authentication is enabled.",
-      "disabled": "Two-factor authentication has been disabled.",
-      "disableConfirm": "Enter a current authenticator or email code to disable two-factor authentication.",
       "errors": {
+        "load": "Unable to load your two-factor settings.",
         "setup": "Unable to start two-factor setup.",
         "qr": "Unable to generate the setup QR code. Use the setup key instead.",
+        "qrExpired": "This QR code expired. Get a new one.",
         "code": "Enter the 6-digit code.",
-        "disableCode": "Enter a 6-digit code or one of your recovery codes.",
-        "confirm": "Unable to enable two-factor authentication.",
-        "disable": "Unable to disable two-factor authentication.",
-        "sendCode": "Unable to send the code. Please try again."
+        "wrongCode": "Wrong code. Check it and try again.",
+        "wrongOrExpired": "Wrong or expired code. Resend a new one.",
+        "confirm": "Unable to turn on two-factor authentication.",
+        "disable": "Unable to turn off two-factor authentication.",
+        "sendCode": "Unable to send the code. Please try again.",
+        "rateLimited": "Too many attempts. Try again in {seconds}s."
       }
     },
     "errors": {
