@@ -1,20 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { loginMethods } from "~/utils/mfa";
+import { MFA_CODE_PATTERN, normalizeMfaCode } from "~/utils/mfa";
 
-describe("loginMethods", () => {
-  it("offers every method the account has, then recovery codes", () => {
-    expect(loginMethods(["totp", "email"], "totp")).toEqual(["totp", "email", "recovery"]);
+describe("normalizeMfaCode", () => {
+  it("drops spaces people paste in", () => {
+    expect(normalizeMfaCode(" 123 456 ")).toBe("123456");
+  });
+});
+
+describe("MFA_CODE_PATTERN", () => {
+  it("accepts a 6-digit code", () => {
+    expect(MFA_CODE_PATTERN.test("123456")).toBe(true);
   });
 
-  it("offers only the one method an account has", () => {
-    expect(loginMethods(["email"], "email")).toEqual(["email", "recovery"]);
+  it("accepts a 10-character recovery code with - and _", () => {
+    expect(MFA_CODE_PATTERN.test("a1B2c3D4e5")).toBe(true);
+    expect(MFA_CODE_PATTERN.test("a1B-c3_4e5")).toBe(true);
   });
 
-  it("falls back to the preferred method when the list is missing", () => {
-    expect(loginMethods([], "totp")).toEqual(["totp", "recovery"]);
-  });
-
-  it("offers everything when the API says nothing", () => {
-    expect(loginMethods([], null)).toEqual(["totp", "email", "recovery"]);
+  it("rejects other lengths", () => {
+    expect(MFA_CODE_PATTERN.test("12345")).toBe(false);
+    expect(MFA_CODE_PATTERN.test("1234567")).toBe(false);
+    expect(MFA_CODE_PATTERN.test("a1B2c3D4e")).toBe(false);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getErrorMessage, getErrorStatus } from "~/utils/api";
+import { getErrorMessage, getErrorStatus, getRetryAfter, isApiError } from "~/utils/api";
 
 const failure = (status: number, data?: object) => ({ response: { status }, data });
 
@@ -34,5 +34,36 @@ describe("getErrorStatus", () => {
 
   it("is undefined when the request never got a response", () => {
     expect(getErrorStatus(new TypeError("Failed to fetch"))).toBeUndefined();
+  });
+});
+
+describe("getRetryAfter", () => {
+  const withHeader = (value: string | null) => ({
+    response: { status: 429, headers: { get: () => value } },
+  });
+
+  it("reads the wait in seconds", () => {
+    expect(getRetryAfter(withHeader("42"))).toBe(42);
+  });
+
+  it("returns null when the header is missing or not a number", () => {
+    expect(getRetryAfter(withHeader(null))).toBeNull();
+    expect(getRetryAfter(withHeader("soon"))).toBeNull();
+    expect(getRetryAfter(withHeader("0"))).toBeNull();
+    expect(getRetryAfter(new Error("boom"))).toBeNull();
+  });
+});
+
+describe("isApiError", () => {
+  const error = failure(400, { error: "validation_error", error_description: "Invalid authentication code" });
+
+  it("matches the error code", () => {
+    expect(isApiError(error, "validation_error")).toBe(true);
+    expect(isApiError(error, "invalid_grant")).toBe(false);
+  });
+
+  it("matches the description exactly when given", () => {
+    expect(isApiError(error, "validation_error", "Invalid authentication code")).toBe(true);
+    expect(isApiError(error, "validation_error", "Start 2FA setup first")).toBe(false);
   });
 });

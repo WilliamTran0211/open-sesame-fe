@@ -9,9 +9,10 @@ export function useCooldown(seconds: number) {
     timer = undefined;
   }
 
-  function start() {
+  // `duration` overrides the default, e.g. with a Retry-After from the API.
+  function start(duration = seconds) {
     stop();
-    remaining.value = seconds;
+    remaining.value = duration;
     timer = window.setInterval(() => {
       remaining.value -= 1;
 
